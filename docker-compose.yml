@@ -34,6 +34,15 @@ services:
     ports:
       - "8000:8000"
 
+  ai-commerce:
+    build:
+      context: ./ai-commerce
+      dockerfile: Dockerfile
+    environment:
+      PORT: 8002
+    ports:
+      - "8002:8002"
+
   frontend:
     build:
       context: ./frontend
