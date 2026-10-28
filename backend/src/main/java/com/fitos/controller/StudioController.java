@@ -4,6 +4,7 @@ import com.fitos.model.Studio;
 import com.fitos.repository.StudioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class StudioController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public Studio createStudio(@RequestBody Studio studio) {
         return studioRepository.save(studio);
     }

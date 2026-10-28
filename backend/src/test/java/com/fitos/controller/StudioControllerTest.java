@@ -18,14 +18,31 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fitos.security.CustomUserDetailsService;
+import com.fitos.security.JwtTokenProvider;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+
 @WebMvcTest(StudioController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class StudioControllerTest {
+
+    @MockBean
+    private com.fitos.repository.UserRepository userRepository;
+
+    @MockBean
+    private com.fitos.service.StudioAccessService studioAccessService;
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
     private StudioRepository studioRepository;
+
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
 
     @Autowired
     private ObjectMapper objectMapper;
