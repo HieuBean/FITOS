@@ -117,6 +117,14 @@ class LeadConversionFlowIntegrationTest {
             assertEquals("MUSCLE_GAIN", lead.getGoal());
             assertEquals("NEW", lead.getStatus());
 
+            // 3b. Ghi nhận hoạt động tư vấn (task #148: Add Activity trong luồng E2E)
+            com.fitos.dto.lead.LeadActivityRequest activity = new com.fitos.dto.lead.LeadActivityRequest();
+            activity.setActivityType("CONSULTATION");
+            activity.setNotes("Tư vấn gói Perform, hẹn tập thử thứ 7");
+            var recorded = leadService.addActivity(lead.getId(), activity, session.getUserId());
+            assertNotNull(recorded.getId());
+            assertEquals("CONSULTATION", recorded.getActivityType());
+
             // 4. Convert → phải tạo Customer và giữ nguyên lịch sử activity
             LeadResponse converted = leadService.convertLead(lead.getId());
             assertEquals("CONVERTED", converted.getStatus());
@@ -126,7 +134,10 @@ class LeadConversionFlowIntegrationTest {
             Long activityCount = jdbc.queryForObject(
                     "SELECT COUNT(*) FROM lead_activities WHERE lead_id = ?", Long.class, lead.getId());
             assertNotNull(activityCount);
-            assertTrue(activityCount >= 1, "Lead phải giữ activity timeline sau khi convert");
+            assertTrue(activityCount >= 2, "Lead phải giữ activity timeline (tạo + tư vấn) sau khi convert");
+            assertTrue(jdbc.queryForObject(
+                    "SELECT COUNT(*) FROM lead_activities WHERE lead_id = ? AND activity_type = 'CONSULTATION'",
+                    Long.class, lead.getId()) >= 1, "Hoạt động tư vấn phải được lưu");
 
             // 5. Convert lần hai phải bị chặn
             assertThrows(com.fitos.exception.BadRequestException.class,

@@ -62,6 +62,7 @@
 - [x] REST vận hành: `/api/classes`, `/api/sessions`, `/api/bookings`, `/api/checkin`, `/api/attendance`, `/api/pt-sessions`, `/api/trainers`
 - [x] Proxy AI: `/api/ai/noshow-risk`, `/api/ai/schedule-suggestions`, `/api/ai/trainer-tips`, `/api/ai/operations-health` → `ai-operations`, fallback rule-based
 - [x] `/api/profile/me` + `/api/profile/password` — phục vụ FE task #80
+- [x] **#57** `/api/users` — list/search/filter, tạo tài khoản staff, đổi vai trò, khoá/mở khoá
 - [x] `SecurityConfig`: mở `GET /api/plans|/api/classes`, `POST /api/payments/callback`
 
 ### Layer FE
@@ -69,19 +70,24 @@
 - [x] `MembershipBadge` — ACTIVE/PAUSED/EXPIRED/CANCELLED/PENDING
 - [x] `RenewalRiskWidget` — `/memberships/expiring` + chọn 7/14/30 ngày + nút gia hạn
 - [x] `/dashboard/schedule` — lịch tuần từ `/api/sessions` + banner gợi ý AI + điều hướng tuần
-- [x] `/dashboard/bookings` — bảng booking thật + điểm danh / no-show / huỷ
+- [x] `/dashboard/bookings` — bảng booking thật + điểm danh / no-show / huỷ + badge no-show
 - [x] `/dashboard/member/payments` — membership card + lịch sử payment thật
 - [x] `/classes` — grid lớp thật từ `/api/sessions` + `/api/classes`
 - [x] `/dashboard/member/profile` — xem/sửa hồ sơ + đổi mật khẩu + mục tiêu + badge gói
 - [x] Sidebar: thêm mục "Gói dịch vụ" → `/dashboard/plans`
 - [x] Dashboard manager: nhúng `RenewalRiskWidget`
+- [x] **#94** `/dashboard/member/book` — tabs Classes/PT + date strip + đặt chỗ thật + huỷ
+- [x] **#95** `BookConfirmModal` — modal xác nhận đặt chỗ (lớp, HLV, giờ, chỗ trống, no-show risk)
+- [x] **#96** `NoShowBadge` — gọi `/api/ai/noshow-risk`, màu theo mức rủi ro, ẩn khi lỗi
+- [x] **#98** `/dashboard/users` — list + tìm kiếm + lọc vai trò + đổi role + khoá/mở + tạo tài khoản
 
 ### Layer AI (`ai-operations/`, port 8003)
 - [x] `main.py` + `schemas.py` + bearer-token auth
+- [x] **#116** `services/schedule_context_loader.py` — ma trận lịch tuần: occupancy theo ngày/giờ, giờ vàng còn trống, tải HLV, danh sách lớp ế/kín
 - [x] `POST /predict-noshow` — rule-based có yếu tố giải thích (`factors`)
-- [x] `POST /suggest-schedule` — heuristic lấp slot + mở thêm suất
+- [x] `POST /suggest-schedule` — heuristic lấp slot + mở thêm suất; trả kèm `matrix` đã tổng hợp
 - [x] `POST /trainer-tips` — LLM nếu có key, fallback rule-based
-- [x] `pytest`: 15 test (biên 0..1, monotonic, auth 401/403, fallback, ngày trống)
+- [x] `pytest`: **23 test** (biên 0..1, monotonic, auth 401/403, fallback, ma trận lịch, golden gaps)
 - [x] `Dockerfile` python:3.11-slim, non-root, healthcheck, expose 8003
 
 ### Layer OPS
@@ -94,7 +100,8 @@
 ### Layer TEST (A)
 - [x] `AuthServiceTest` — 10 test: register (+customer), không tự cấp ADMIN, email trùng, login, sai mật khẩu, refresh sai loại, user disable, refresh hợp lệ, logout
 - [x] `LeadServiceTest` — 9 test: convert NEW, convert trùng, lead không tồn tại, tái dùng customer, markLost thiếu lý do, markLost ghi activity, CONVERTED không lost, chuẩn hoá source/goal, chặn studio khác
-- [x] `LeadConversionFlowIntegrationTest` — E2E Register → Login → Lead → Convert → Customer (chạy khi có `FITOS_TEST_DATABASE_URL`)
+- [x] **#147** `ProgressServiceTest` — 9 test: ghi/upsert body metric, streak hiện tại (cho phép bắt đầu từ hôm qua), streak đứt quãng, streak dài nhất, chưa có dữ liệu, gộp PR + cân nặng
+- [x] **#148** `LeadConversionFlowIntegrationTest` — E2E Register → Login → Lead → **Add Activity** → Convert → Customer (chạy khi có `FITOS_TEST_DATABASE_URL`)
 
 ## 4. Thứ tự thực hiện & phụ thuộc
 
@@ -117,6 +124,16 @@ DB (đã có)
 4. `docker compose config` hợp lệ (không cần bật container khi máy không có Docker daemon).
 5. Mỗi endpoint có `@PreAuthorize` đúng role và lọc `studio_id`.
 6. Không có secret hard-code; mọi cấu hình qua biến môi trường.
+
+### Kết quả kiểm chứng thực tế
+
+| Hạng mục | Kết quả |
+|---|---|
+| `mvn test` (có PostgreSQL 16 thật qua Docker) | **61 test, 0 fail**, 2 skipped (Redis) |
+| Integration E2E (Register→Login→Lead→Activity→Convert) | **pass** trên DB thật, Flyway V5_1 chạy sạch |
+| `pytest ai-operations` | **23/23 pass** |
+| `npm run build` | **31 route**, TypeScript sạch |
+| `docker compose config` | hợp lệ |
 
 ## 6. Lệnh kiểm chứng
 

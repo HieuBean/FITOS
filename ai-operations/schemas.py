@@ -43,6 +43,22 @@ class ScheduleSession(BaseModel):
     start_time: str
     capacity: int = Field(ge=1)
     booked_count: int = Field(ge=0)
+    date: Optional[str] = None
+    trainer_id: Optional[int] = None
+    room: Optional[str] = None
+
+
+class ScheduleMatrixOut(BaseModel):
+    total_sessions: int = 0
+    total_capacity: int = 0
+    total_booked: int = 0
+    occupancy_rate: float = 0.0
+    by_weekday: dict = {}
+    by_hour: dict = {}
+    golden_gaps: List[str] = []
+    trainer_load: dict = {}
+    underfilled: List[dict] = []
+    overbooked: List[dict] = []
 
 
 class ScheduleRequest(BaseModel):
@@ -62,6 +78,7 @@ class ScheduleResponse(BaseModel):
     date: str
     suggestions: List[SlotSuggestion]
     engine: str = "deterministic"
+    matrix: Optional[ScheduleMatrixOut] = None
 
 
 class CustomerProfile(BaseModel):

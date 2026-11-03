@@ -22,11 +22,14 @@ from schemas import (
     HealthResponse,
     NoShowRequest,
     NoShowResponse,
+    ScheduleMatrixOut,
     ScheduleRequest,
     ScheduleResponse,
+    SlotSuggestion,
     TrainerTipsRequest,
     TrainerTipsResponse,
 )
+from services.schedule_context_loader import SessionRow, build_schedule_matrix, summarize
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ai-operations")
@@ -99,9 +102,50 @@ async def predict_noshow(request: NoShowRequest) -> NoShowResponse:
 
 @app.post("/suggest-schedule", response_model=ScheduleResponse, dependencies=[Depends(verify_token)])
 async def suggest_schedule(request: ScheduleRequest) -> ScheduleResponse:
-    """Task #112: gợi ý lấp chỗ trống / mở thêm suất cho một ngày."""
+    """Task #112: gợi ý lấp chỗ trống / mở thêm suất.
+
+    Task #116: dữ liệu thô được đưa qua `schedule_context_loader` để dựng ma trận
+    lịch tuần (occupancy theo ngày/giờ, giờ vàng còn trống, tải của HLV) trước khi
+    sinh gợi ý — LLM dùng ma trận này làm ngữ cảnh, nếu không có key thì heuristic
+    vẫn chạy trên cùng dữ liệu đã tổng hợp.
+    """
+    matrix = build_schedule_matrix([
+        SessionRow(
+            session_id=item.session_id,
+            class_id=item.class_id,
+            class_name=item.class_name,
+            start_time=item.start_time,
+            capacity=item.capacity,
+            booked_count=item.booked_count,
+            date=item.date or request.date,
+            trainer_id=item.trainer_id,
+            room=item.room,
+        )
+        for item in request.sessions
+    ])
+
+    if llm.is_configured():
+        context = (
+            f"Ngày: {request.date}\n"
+            f"Tổng quan: {summarize(matrix)}\n"
+            f"Ma trận: {matrix.to_dict()}"
+        )
+        llm_suggestions = await llm.suggest_schedule_with_llm(context)
+        if llm_suggestions:
+            return ScheduleResponse(
+                date=request.date,
+                suggestions=[SlotSuggestion(**item) for item in llm_suggestions],
+                engine="llm",
+                matrix=ScheduleMatrixOut(**matrix.to_dict()),
+            )
+
     suggestions = suggest_slots(request.date, request.sessions)
-    return ScheduleResponse(date=request.date, suggestions=suggestions, engine="deterministic")
+    return ScheduleResponse(
+        date=request.date,
+        suggestions=suggestions,
+        engine="deterministic",
+        matrix=ScheduleMatrixOut(**matrix.to_dict()),
+    )
 
 
 @app.post("/trainer-tips", response_model=TrainerTipsResponse, dependencies=[Depends(verify_token)])

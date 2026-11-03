@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '@/lib/api';
 import RoleGuard from '@/components/RoleGuard';
+import NoShowBadge from '@/components/NoShowBadge';
 import { extractPageContent, formatDate, type BookingDto } from '@/lib/contracts';
 
 const statusStyles: Record<string, string> = {
@@ -207,7 +208,16 @@ export default function BookingsPage() {
                       <p className="text-sm text-[#111310] truncate">{booking.className}</p>
                       <p className="text-[11px] text-[#8A8E85]">{booking.startTime?.slice(0, 5)}</p>
                     </div>
-                    <span className="text-xs text-[#5E625A]">{formatDate(booking.sessionDate)}</span>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-[#5E625A]">{formatDate(booking.sessionDate)}</span>
+                      {booking.status === 'CONFIRMED' && !booking.checkedIn && (
+                        <NoShowBadge
+                          sessionId={booking.sessionId}
+                          customerId={booking.customerId}
+                          compact
+                        />
+                      )}
+                    </div>
                     <span
                       className={`justify-self-start text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
                         statusStyles[booking.status] || 'bg-gray-100 text-gray-700'

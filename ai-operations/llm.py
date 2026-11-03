@@ -57,3 +57,48 @@ async def enrich_tips(context: str) -> Optional[List[str]]:
     except Exception as exception:  # pragma: no cover - lỗi mạng/quota
         logger.warning("Gọi LLM thất bại, dùng rule-based: %s", exception)
     return None
+
+
+SCHEDULE_PROMPT = (
+    "Bạn là chuyên gia vận hành phòng gym tại Việt Nam. Dựa trên ma trận lịch tuần được cung cấp, "
+    "hãy đề xuất tối đa 3 hành động cụ thể để tăng tỉ lệ lấp chỗ (điều ca huấn luyện viên, mở thêm slot "
+    "giờ vàng, gộp lớp ế). Mỗi đề xuất phải gắn với khung giờ và số liệu thật trong ma trận. "
+    'Trả về JSON dạng {"suggestions": [{"slot": "18:00", "class_name": "...", "reason": "...", "priority": 0.8}]}.'
+)
+
+
+async def suggest_schedule_with_llm(context: str) -> Optional[List[dict]]:
+    """Gợi ý lịch bằng LLM; trả None nếu chưa cấu hình hoặc lỗi để caller fallback."""
+    if _client is None:
+        return None
+    try:
+        response = await _client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {"role": "system", "content": SCHEDULE_PROMPT},
+                {"role": "user", "content": context},
+            ],
+            temperature=0.3,
+            max_tokens=600,
+            response_format={"type": "json_object"},
+        )
+        import json
+
+        data = json.loads(response.choices[0].message.content or "{}")
+        raw = data.get("suggestions")
+        if not isinstance(raw, list):
+            return None
+        cleaned: List[dict] = []
+        for item in raw[:3]:
+            if not isinstance(item, dict):
+                continue
+            cleaned.append({
+                "slot": str(item.get("slot", "")),
+                "class_name": str(item.get("class_name", "")),
+                "reason": str(item.get("reason", "")),
+                "priority": float(item.get("priority", 0.5)),
+            })
+        return cleaned or None
+    except Exception as exception:  # pragma: no cover - lỗi mạng/quota
+        logger.warning("LLM gợi ý lịch thất bại, dùng heuristic: %s", exception)
+        return None

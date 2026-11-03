@@ -50,8 +50,15 @@ const allNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'HỘI VIÊN',
-    roles: ['ADMIN', 'MEMBER'],
+    label: 'QUẢN TRỊ',
+    roles: ['ADMIN', 'MANAGER'],
+    links: [
+      { href: '/dashboard/users', label: 'Tài khoản & Phân quyền' },
+      { href: '/dashboard/plans', label: 'Gói dịch vụ & Giá' },
+    ],
+  },
+  {
+    label: 'HỘI VIÊN',    roles: ['ADMIN', 'MEMBER'],
     links: [
       { href: '/dashboard/member', label: 'Trang cá nhân' },
       { href: '/dashboard/member/book', label: 'Đặt lịch tập' },
