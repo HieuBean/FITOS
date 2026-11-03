@@ -40,5 +40,6 @@ fitos:
     admin-password: ${FITOS_BOOTSTRAP_ADMIN_PASSWORD:}
   ai:
     crm-url: ${AI_SERVICE_URL:http://localhost:8000}
+    operations-url: ${AI_OPERATIONS_URL:http://localhost:8003}
     workout-url: ${AI_WORKOUT_URL:http://localhost:8004}
     token: ${AI_SERVICE_TOKEN:fitos-ai-token}

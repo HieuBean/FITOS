@@ -95,13 +95,22 @@ public class LeadController {
     public ResponseEntity<LeadResponse> convertLead(@PathVariable("id") Long id) {
         return ResponseEntity.ok(leadService.convertLead(id));
     }
-    @PatchMapping("/{id}/assign")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PatchMapping("/{id}/assign")    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Assign lead to staff member")
     public ResponseEntity<LeadResponse> assignLead(
             @PathVariable("id") Long id,
             @Valid @RequestBody LeadAssignRequest req,
             @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(leadService.assignLead(id, req.getAssignedToUserId(), principal != null ? principal.getId() : null));
+    }
+
+    @PatchMapping("/{id}/lost")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @Operation(summary = "Mark a lead as lost with a mandatory reason")
+    public ResponseEntity<LeadResponse> markLost(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody com.fitos.dto.lead.LeadLostRequest req,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(leadService.markLost(id, req.reason(), principal != null ? principal.getId() : null));
     }
 }

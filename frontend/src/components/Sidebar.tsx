@@ -29,6 +29,7 @@ const allNavGroups: NavGroup[] = [
       { href: '/dashboard/create-lead', label: 'Thêm khách tiềm năng' },
       { href: '/dashboard/sales', label: 'Đơn hàng & Doanh số' },
       { href: '/dashboard/create-sale', label: 'Tạo đơn mới' },
+      { href: '/dashboard/plans', label: 'Gói dịch vụ' },
     ],
   },
   {

@@ -55,9 +55,14 @@ public class SecurityConfig {
                     "/api/auth/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
-                    "/swagger-ui.html"
+                    "/swagger-ui.html",
+                    "/actuator/health"
                 ).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/studios").permitAll()
+                // Trang marketing công khai + webhook thanh toán (không dùng JWT)
+                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                    "/api/plans/**", "/api/classes/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/payments/callback").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

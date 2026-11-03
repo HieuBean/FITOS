@@ -219,6 +219,37 @@ public class LeadService {
     }
 
     @Transactional
+    public LeadResponse markLost(Long leadId, String reason, Long actorUserId) {
+        Lead lead = leadRepository.findByIdAndStudioId(leadId, StudioContext.currentStudioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + leadId));
+        if ("CONVERTED".equals(lead.getStatus())) {
+            throw new BadRequestException("Lead đã chuyển thành hội viên, không thể đánh dấu thất bại");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new BadRequestException("Lý do mất lead là bắt buộc");
+        }
+        if ("LOST".equals(lead.getStatus())) {
+            return mapToResponse(lead, true);
+        }
+        String previousStatus = lead.getStatus();
+        lead.setStatus("LOST");
+        lead.setLostReason(reason.trim());
+
+        User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+        leadActivityRepository.save(LeadActivity.builder()
+                .studioId(lead.getStudioId())
+                .lead(lead)
+                .user(actor)
+                .activityType("NOTE")
+                .notes("Lead marked LOST from " + previousStatus + ": " + reason.trim())
+                .activityTime(Instant.now())
+                .build());
+
+        lead = leadRepository.save(lead);
+        return mapToResponse(lead, true);
+    }
+
+    @Transactional
     public LeadResponse convertLead(Long leadId) {
         Lead lead = leadRepository.findByIdAndStudioId(leadId, StudioContext.currentStudioId())
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + leadId));

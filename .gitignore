@@ -49,3 +49,6 @@ playwright-report/
 # Misc
 *.log
 .agents/
+
+# Local tooling (Maven/Python scratch used for verification)
+.tools/

@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import RoleGuard from '@/components/RoleGuard';
 
 import { mapCrmFunnel, mapRevenueChart, type DashboardStatsDto } from '@/lib/contracts';
+import RenewalRiskWidget from '@/components/RenewalRiskWidget';
 
 type DashboardStats = DashboardStatsDto;
 type MonthlyRevenue = ReturnType<typeof mapRevenueChart>[number];
@@ -110,6 +111,8 @@ export default function DashboardPage() {
         {isLoading && <p className="text-sm text-[#5E625A]">Đang tải số liệu...</p>}
         {activeTab === 'OVERVIEW' ? (
           <>
+            {/* Cảnh báo gia hạn — task #88 */}
+            <RenewalRiskWidget days={7} />
             {/* Hàng 1: 4 Thẻ KPI chính */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">

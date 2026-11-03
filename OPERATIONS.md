@@ -23,3 +23,45 @@ mvn test
 ```
 
 Có thể đặt thêm `FITOS_TEST_DATABASE_USER` và `FITOS_TEST_DATABASE_PASSWORD`. Bài kiểm thử tạo dữ liệu trong database này; không trỏ biến trên vào database đang dùng cho ứng dụng.
+
+## Bốn AI service (layer C)
+
+| Service | Port | Thư mục | Endpoint chính |
+|---|---|---|---|
+| ai-crm | 8001 | `ai/` | `/crm/score` (lead scoring, gọi từ `LeadAIClient`) |
+| ai-commerce | 8002 | `ai-commerce/` | `/predict-renewal`, `/renewal-action` |
+| **ai-operations** | **8003** | **`ai-operations/`** | `/health`, `/predict-noshow`, `/suggest-schedule`, `/trainer-tips` |
+| ai-workout | 8004 | `ai-workout/` | `/chat`, `/recommend`, `/safety-check` |
+
+Mọi service dùng chung header `Authorization: Bearer $AI_SERVICE_TOKEN`. Backend gọi ai-operations qua biến `AI_OPERATIONS_URL` (mặc định `http://localhost:8003`); nếu service chết, các endpoint `/api/ai/noshow-risk`, `/api/ai/schedule-suggestions`, `/api/ai/trainer-tips` vẫn trả kết quả rule-based với trường `source=fallback`.
+
+### Chạy riêng ai-operations khi phát triển
+
+```bash
+cd ai-operations
+python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8003
+pytest -q
+```
+
+Không đặt `OPENAI_API_KEY` thì `/trainer-tips` dùng rule engine tất định; đặt key thì tự chuyển sang LLM (trường `engine = llm`).
+
+## Kiểm thử tích hợp của layer C/A
+
+`LeadConversionFlowIntegrationTest` chạy cùng điều kiện `FITOS_TEST_DATABASE_URL` (DB kết thúc bằng `_test`) và kiểm tra luồng Register → Login → tạo Lead → Convert → Customer. Chạy cả hai bài:
+
+```bash
+make test-integration
+# hoặc
+cd backend && mvn -B -Dtest='PostgresWorkflowIntegrationTest,LeadConversionFlowIntegrationTest' test
+```
+
+## CI
+
+| Workflow | Phạm vi |
+|---|---|
+| `ci-ai-operations.yml` | pytest + build image + smoke test `/health` của ai-operations |
+| `ci-integration.yml` | unit test backend, integration test với PostgreSQL + Redis thật, kiểm tra `docker compose config` |
+| `ci-ai-workout.yml` | pytest cho ai-workout (của D) |
+
