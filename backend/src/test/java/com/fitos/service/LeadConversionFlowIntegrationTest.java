@@ -74,12 +74,16 @@ class LeadConversionFlowIntegrationTest {
         String email = "e2e-" + suffix + "@fitos.test";
         String password = "Secret_" + suffix;
 
+        // 0. Chỉ định studio rõ ràng: DB test có thể đã có nhiều studio từ bài test khác
+        Long targetStudio = jdbc.queryForObject("SELECT MIN(id) FROM studios", Long.class);
+
         // 1. Register
         RegisterRequest register = new RegisterRequest();
         register.setEmail(email);
         register.setPassword(password);
         register.setFullName("E2E Member " + suffix);
         register.setPhone("09" + suffix.replaceAll("[^0-9]", "0").substring(0, 8));
+        register.setStudioId(targetStudio);
         AuthResponse registered = authService.register(register);
         assertNotNull(registered.getAccessToken());
         assertEquals(email, registered.getEmail());

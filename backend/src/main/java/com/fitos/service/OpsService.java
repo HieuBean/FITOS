@@ -282,21 +282,18 @@ public class OpsService {
     // ---------------------------------------------------------------- exercises
     @Transactional(readOnly = true)
     public List<ExerciseResponse> listExercises(String category) {
-        Long studioId = StudioContext.currentStudioId();
         List<Exercise> exercises = (category == null || category.isBlank())
-                ? exerciseRepository.findByStudioIdOrderByNameAsc(studioId)
-                : exerciseRepository.findByStudioIdAndCategoryIgnoreCaseOrderByNameAsc(studioId, category);
+                ? exerciseRepository.findAllByOrderByNameAsc()
+                : exerciseRepository.findByCategoryIgnoreCaseOrderByNameAsc(category);
         return exercises.stream().map(this::toExerciseResponse).toList();
     }
 
     @Transactional
     public ExerciseResponse createExercise(ExerciseRequest req) {
-        Long studioId = StudioContext.currentStudioId();
-        if (exerciseRepository.existsByStudioIdAndNameIgnoreCase(studioId, req.name())) {
+        if (exerciseRepository.existsByNameIgnoreCase(req.name())) {
             throw new BadRequestException("Bài tập đã tồn tại: " + req.name());
         }
         Exercise exercise = Exercise.builder()
-                .studioId(studioId)
                 .name(req.name().trim())
                 .category(req.category())
                 .muscleGroup(req.muscleGroup())
@@ -310,7 +307,7 @@ public class OpsService {
 
     @Transactional
     public ExerciseResponse updateExercise(Long id, ExerciseRequest req) {
-        Exercise exercise = exerciseRepository.findByIdAndStudioId(id, StudioContext.currentStudioId())
+        Exercise exercise = exerciseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài tập: " + id));
         exercise.setName(req.name().trim());
         exercise.setCategory(req.category());

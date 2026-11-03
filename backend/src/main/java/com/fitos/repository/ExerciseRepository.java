@@ -7,14 +7,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/** Thư viện bài tập là dữ liệu dùng chung (không phân theo studio). */
 @Repository
 public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
 
-    List<Exercise> findByStudioIdOrderByNameAsc(Long studioId);
+    List<Exercise> findAllByOrderByNameAsc();
 
-    List<Exercise> findByStudioIdAndCategoryIgnoreCaseOrderByNameAsc(Long studioId, String category);
+    List<Exercise> findByCategoryIgnoreCaseOrderByNameAsc(String category);
 
-    Optional<Exercise> findByIdAndStudioId(Long id, Long studioId);
+    Optional<Exercise> findByNameIgnoreCase(String name);
 
-    boolean existsByStudioIdAndNameIgnoreCase(Long studioId, String name);
+    boolean existsByNameIgnoreCase(String name);
 }

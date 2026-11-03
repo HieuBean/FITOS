@@ -6,6 +6,10 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
+/**
+ * Thư viện bài tập dùng chung cho toàn hệ thống (bảng `exercises` không có cột studio_id —
+ * xem migration V4_1 và danh sách bảng tenant trong V4_6).
+ */
 @Entity
 @Table(name = "exercises")
 @Getter
@@ -18,9 +22,6 @@ public class Exercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "studio_id", nullable = false)
-    private Long studioId;
 
     @Column(nullable = false, unique = true, length = 100)
     private String name;
