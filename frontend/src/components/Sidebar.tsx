@@ -29,15 +29,17 @@ const navGroups = [
     links: [
       { href: '/dashboard/trainer', label: 'Trainer Day' },
       { href: '/dashboard/workout-builder', label: 'Workout Builder' },
+      { href: '/dashboard/reports', label: 'Reports & Stats' },
     ],
   },
   {
     label: 'MEMBER',
     links: [
       { href: '/dashboard/member', label: 'Member Home' },
-      { href: '/dashboard/member/book', label: 'Book' },
-      { href: '/dashboard/member/progress', label: 'Progress' },
+      { href: '/dashboard/member/workout-log', label: 'Workout Log' },
+      { href: '/dashboard/member/progress', label: 'Progress & PRs' },
       { href: '/dashboard/member/ai-coach', label: 'AI Coach' },
+      { href: '/dashboard/member/book', label: 'Book' },
       { href: '/dashboard/member/payments', label: 'Payments' },
       { href: '/dashboard/member/profile', label: 'Profile' },
     ],

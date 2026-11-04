@@ -1,0 +1,10 @@
+target/
+.mvn/
+*.class
+*.jar
+*.war
+.idea/
+*.iml
+.git/
+.env
+

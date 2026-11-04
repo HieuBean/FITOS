@@ -8,15 +8,26 @@ spring:
     password: ${DB_PASSWORD:supersecret}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
 
 jwt:
   secret: ${JWT_SECRET:superjwtsecret_default_key_for_dev_mode}
   expirationMs: 86400000
+
+ai:
+  workout:
+    base-url: ${AI_WORKOUT_BASE_URL:http://localhost:8004}
+  internal:
+    token: ${AI_INTERNAL_TOKEN:fitos-ai-token}
 
 springdoc:
   api-docs:

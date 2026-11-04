@@ -1,7 +1,7 @@
-version: "3.9"
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: fitos
       POSTGRES_USER: fitos_user
@@ -9,39 +9,67 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitos_user -d fitos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: fitos_user
       DB_PASSWORD: ${POSTGRES_PASSWORD:-supersecret}
       JWT_SECRET: ${JWT_SECRET:-superjwtsecret}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "8081:8080"
 
   ai:
-    build: 
+    build:
       context: ./ai
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-fitos-ai-token}
     ports:
-      - "8000:8000"
+      - "8001:8000"
+
+  ai-crm:
+    build:
+      context: ./ai-crm
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 8001
+      AI_CRM_API_KEY: ${AI_CRM_API_KEY:-crm-secret-ai-token-2026}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8005:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
-      NEXT_PUBLIC_BACKEND_URL: http://backend:8080/api
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:8081/api
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - backend
       - ai

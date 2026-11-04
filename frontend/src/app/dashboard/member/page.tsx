@@ -19,7 +19,8 @@ const weekDays = [
 
 const quickActions = [
   { label: 'Book a class', description: 'Find and reserve your next session', href: '/dashboard/member/book', emoji: '🗓️' },
-  { label: 'Log workout', description: 'Record a gym or home workout', href: '/dashboard/member', emoji: '💪' },
+  { label: 'Log workout', description: 'Record sets, reps and track live session', href: '/dashboard/member/workout-log', emoji: '💪' },
+  { label: 'View progress', description: 'Check your streak, chart and PRs', href: '/dashboard/member/progress', emoji: '📈' },
   { label: 'Chat with AI coach', description: 'Get personalised training advice', href: '/dashboard/member/ai-coach', emoji: '🤖' },
 ];
 

@@ -49,3 +49,6 @@ playwright-report/
 # Misc
 *.log
 .agents/
+
+# Windows DOS devices
+nul
