@@ -1,55 +1,54 @@
 package com.fitos.controller;
 
-import com.fitos.dto.ClassDto;
-import com.fitos.service.ClassSessionService;
+import com.fitos.dto.ops.OpsDtos.ClassRequest;
+import com.fitos.dto.ops.OpsDtos.ClassResponse;
+import com.fitos.dto.ops.OpsDtos.SessionResponse;
+import com.fitos.service.OpsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+/** Task #47: quản lý loại lớp học. GET mở công khai cho trang /classes. */
 @RestController
 @RequestMapping("/api/classes")
 @RequiredArgsConstructor
-@Tag(name = "Classes API", description = "Quản lý danh mục lớp học (Task 60)")
+@Tag(name = "Classes", description = "Loại lớp học của studio")
 public class ClassController {
 
-    private final ClassSessionService classSessionService;
+    private final OpsService opsService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách các lớp tập luyện (Yoga, HIIT, v.v.)")
-    public ResponseEntity<Page<ClassDto.ClassResponse>> getAll(
-            @RequestParam(required = false) String type,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(classSessionService.findAllClasses(type, PageRequest.of(page, size)));
-    }
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Xem chi tiết một lớp học")
-    public ResponseEntity<ClassDto.ClassResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(classSessionService.findClassById(id));
+    @Operation(summary = "Danh sách lớp học đang hoạt động")
+    public ResponseEntity<List<ClassResponse>> list(
+            @RequestParam(value = "includeInactive", defaultValue = "false") boolean includeInactive) {
+        return ResponseEntity.ok(opsService.listClasses(!includeInactive));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @Operation(summary = "Tạo mới một lớp học")
-    public ResponseEntity<ClassDto.ClassResponse> create(@Valid @RequestBody ClassDto.CreateClassRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(classSessionService.createClass(req));
+    @Operation(summary = "Tạo loại lớp học")
+    public ResponseEntity<ClassResponse> create(@Valid @RequestBody ClassRequest req) {
+        return new ResponseEntity<>(opsService.createClass(req), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @Operation(summary = "Cập nhật thông tin lớp học")
-    public ResponseEntity<ClassDto.ClassResponse> update(
-            @PathVariable Long id,
-            @Valid @RequestBody ClassDto.UpdateClassRequest req) {
-        return ResponseEntity.ok(classSessionService.updateClass(id, req));
+    @Operation(summary = "Cập nhật loại lớp học")
+    public ResponseEntity<ClassResponse> update(@PathVariable("id") Long id,
+                                                @Valid @RequestBody ClassRequest req) {
+        return ResponseEntity.ok(opsService.updateClass(id, req));
+    }
+
+    @GetMapping("/{id}/sessions")
+    @Operation(summary = "Các buổi học của một lớp")
+    public ResponseEntity<List<SessionResponse>> sessions(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(opsService.sessionsOfClass(id));
     }
 }
-

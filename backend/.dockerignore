@@ -6,5 +6,5 @@ target/
 .idea/
 *.iml
 .git/
-.env
-
+*.log
+.env*

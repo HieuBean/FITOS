@@ -3,8 +3,8 @@ package com.fitos.service;
 import com.fitos.dto.PTDto;
 import com.fitos.exception.BusinessException;
 import com.fitos.exception.ResourceNotFoundException;
-import com.fitos.model.PTPackage;
-import com.fitos.repository.PTPackageRepository;
+import com.fitos.model.PtPackage;
+import com.fitos.repository.PtPackageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PTPackageService {
 
-    private final PTPackageRepository ptPackageRepository;
+    private final PtPackageRepository ptPackageRepository;
 
     public List<PTDto.PackageResponse> getCustomerPackages(Long customerId) {
         return ptPackageRepository.findByCustomerId(customerId).stream()
@@ -32,7 +32,7 @@ public class PTPackageService {
      */
     @Transactional
     public PTDto.PackageResponse useSession(Long packageId) {
-        PTPackage pkg = ptPackageRepository.findById(packageId)
+        PtPackage pkg = ptPackageRepository.findById(packageId)
                 .orElseThrow(() -> new ResourceNotFoundException("PT Package not found with id: " + packageId));
 
         if (!"ACTIVE".equalsIgnoreCase(pkg.getStatus())) {
@@ -40,37 +40,36 @@ public class PTPackageService {
         }
 
         if (pkg.getRemainingSessions() <= 0) {
-            pkg.setStatus("EXHAUSTED");
+            pkg.setStatus("DEPLETED");
             ptPackageRepository.save(pkg);
             throw new BusinessException("No remaining sessions left in this PT Package");
         }
 
         pkg.setRemainingSessions(pkg.getRemainingSessions() - 1);
         if (pkg.getRemainingSessions() == 0) {
-            pkg.setStatus("EXHAUSTED");
+            pkg.setStatus("DEPLETED");
         }
 
         log.info("Deducted 1 session from PT Package {}. Remaining: {}, version: {}", 
                 pkg.getId(), pkg.getRemainingSessions(), pkg.getVersion());
 
         // Hibernate tự động kiểm tra cột version và tăng version + 1
-        PTPackage saved = ptPackageRepository.save(pkg);
+        PtPackage saved = ptPackageRepository.save(pkg);
         return mapToPackageResponse(saved);
     }
 
-    public PTDto.PackageResponse mapToPackageResponse(PTPackage pkg) {
+    public PTDto.PackageResponse mapToPackageResponse(PtPackage pkg) {
         return PTDto.PackageResponse.builder()
                 .id(pkg.getId())
-                .customerId(pkg.getCustomer().getId())
-                .trainerId(pkg.getTrainer() != null ? pkg.getTrainer().getId() : null)
-                .trainerName(pkg.getTrainer() != null ? pkg.getTrainer().getName() : null)
+                .customerId(pkg.getCustomerId())
+                .trainerId(null)
+                .trainerName(null)
                 .totalSessions(pkg.getTotalSessions())
                 .remainingSessions(pkg.getRemainingSessions())
                 .status(pkg.getStatus())
-                .startDate(pkg.getStartDate())
-                .endDate(pkg.getEndDate())
+                .startDate(pkg.getCreatedAt() != null ? pkg.getCreatedAt().toLocalDate() : null)
+                .endDate(pkg.getExpiresAt())
                 .version(pkg.getVersion())
                 .build();
     }
 }
-

@@ -1,0 +1,105 @@
+name: CI - Integration (Backend + PostgreSQL)
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/ci-integration.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/ci-integration.yml'
+
+jobs:
+  unit:
+    name: Unit tests (no database)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Run unit tests
+        run: mvn -B -Dtest='!PostgresWorkflowIntegrationTest,!LeadConversionFlowIntegrationTest' test
+
+  integration:
+    name: Integration tests (real PostgreSQL)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: fitos_test
+          POSTGRES_USER: fitos_user
+          POSTGRES_PASSWORD: supersecret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fitos_user -d fitos_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Run Flyway + integration flows
+        env:
+          FITOS_TEST_DATABASE_URL: jdbc:postgresql://localhost:5432/fitos_test
+          FITOS_TEST_DATABASE_USER: fitos_user
+          FITOS_TEST_DATABASE_PASSWORD: supersecret
+          REDIS_HOST: localhost
+          REDIS_PORT: '6379'
+        run: |
+          mvn -B -Dtest='PostgresWorkflowIntegrationTest,LeadConversionFlowIntegrationTest' test
+          mvn -B -DskipTests package
+
+      - name: Upload surefire reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports
+          retention-days: 7
+
+  compose-config:
+    name: Validate docker-compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker compose config
+        run: docker compose config --quiet

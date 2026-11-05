@@ -4,7 +4,7 @@
 >
 > Tài liệu này mô tả toàn bộ chức năng nghiệp vụ của FITOS theo cấu trúc: **Chức năng chính → chức năng phụ → mô tả → actor → business rules**.
 >
-> FITOS là nền tảng B2B2C cho Fitness Studio/Gym: doanh nghiệp là khách hàng của FITOS; Manager/Owner, Receptionist và Trainer vận hành hệ thống; Member là người dùng cuối. Quy trình trung tâm là **Visitor → Lead → Customer → Member → Purchase → Payment → Membership → Booking/PT → Workout → Progress → AI → Renewal/Upsell**.
+> FITOS là nền tảng B2B2C cho Fitness Studio/Gym: mỗi Studio là một đơn vị sử dụng FITOS; Manager/Owner, Receptionist và Trainer vận hành Studio; Customer là khách hàng của Studio. Quy trình trung tâm là **Visitor → Lead → Customer → Order → Payment → Membership/PT Package → Member sử dụng dịch vụ → Booking/PT → Workout → Progress → AI → Renewal/Upsell**. Customer có thể tạo tài khoản trước khi mua dịch vụ.
 
 ---
 
@@ -35,6 +35,13 @@ FITOS giúp Fitness Studio quản lý:
 - Full HRM.
 - Healthcare/medical system.
 - IoT/wearable platform.
+
+### 1.3. Phạm vi nhiều Studio
+
+- FITOS phục vụ nhiều Studio độc lập. Mỗi Lead, Customer, Plan, Order, Payment, Membership, PT Package, lịch, Booking, Attendance và dữ liệu tập luyện phải thuộc đúng một Studio. User là tài khoản đăng nhập chung, có thể được cấp vai trò ở nhiều Studio; Customer Profile và quyền của User được liên kết riêng theo từng Studio.
+- User có quyền ở nhiều Studio phải chọn Studio đang làm việc; backend kiểm tra quyền của User tại Studio đó trên mỗi request. Mọi thao tác đọc/ghi dữ liệu nghiệp vụ xác định Studio từ ngữ cảnh đã xác thực, không tin `studio_id` do client tự gửi. Dữ liệu của Studio này không được hiển thị hoặc sửa bởi Studio khác chỉ vì User có cùng email hay biết ID bản ghi.
+- Visitor chỉ xem thông tin công khai của Studio đã chọn. Việc tạo Studio và cấp quyền nhân sự chỉ do vai trò quản trị nền tảng thực hiện.
+- **Multi-studio** là nhiều Studio độc lập trên FITOS; **multi-branch** là nhiều chi nhánh trong cùng một Studio và thuộc phạm vi sau MVP.
 
 ---
 
@@ -86,7 +93,7 @@ LOST
 
 ## 2.3. Member / Customer
 
-Khách đã chuyển đổi và có tài khoản.
+**Customer** là hồ sơ khách hàng của một Studio, có thể được tạo từ Lead hoặc đăng ký trực tiếp. **User** là tài khoản đăng nhập có thể liên kết với Customer. **Member** là Customer đang có ít nhất một quyền sử dụng dịch vụ còn hiệu lực từ Membership hoặc PT Package; từng quyền cụ thể vẫn phụ thuộc gói đã mua. Việc có tài khoản hoặc trạng thái hồ sơ `ACTIVE` tự nó không cấp quyền vào lớp/PT. Customer chưa mua gói vẫn được xem hồ sơ, gói dịch vụ và lịch công khai khi có tài khoản.
 
 Quyền:
 - Quản lý Profile.
@@ -142,6 +149,8 @@ Quyền:
 
 ## 2.7. Admin
 
+Admin của Studio có quyền quản trị trong Studio được cấp. Quản trị viên nền tảng là vai trò riêng, chỉ dùng để tạo Studio và quản lý cấu hình xuyên Studio; không mặc nhiên xem hồ sơ sức khỏe của Customer.
+
 Quyền:
 - Users.
 - Roles.
@@ -164,13 +173,15 @@ CONTACT / CONSULTATION
         ↓
    INTERESTED
         ↓
-     PURCHASE
+ CUSTOMER PROFILE / ACCOUNT
+        ↓
+     PURCHASE / ORDER
         ↓
      PAYMENT
         ↓
-MEMBERSHIP ACTIVE
+MEMBERSHIP / PT PACKAGE ACTIVE
         ↓
-      MEMBER
+  MEMBER ĐỦ ĐIỀU KIỆN SỬ DỤNG
         ↓
 ┌───────┼─────────┐
 │       │         │
@@ -184,6 +195,8 @@ RENEWAL / UPSELL
 ```
 
 Mục tiêu là hệ thống phải lưu được lịch sử của customer xuyên suốt vòng đời, không làm mất lịch sử Lead sau khi convert.
+
+Các nhánh hợp lệ: Customer có thể đăng ký trực tiếp mà không đi qua Lead; Lead có thể chuyển thành Customer trước khi có tài khoản và trước khi mua gói; PT Package có thể được mua độc lập nếu chính sách Studio cho phép. Quyền sử dụng từng dịch vụ dựa trên gói đã thanh toán, hiệu lực ngày và quyền lợi của gói, không chỉ dựa vào vai trò đăng nhập.
 
 ---
 
@@ -261,6 +274,8 @@ LOST
 - Converted Lead không được convert lần hai.
 - Lead history không bị xóa khi convert.
 - Chỉ Staff có quyền CRM mới được chuyển đổi Lead.
+- Lead chỉ thuộc một Studio. Tìm Lead trùng theo số điện thoại/email trong Studio đó; Staff xác nhận liên kết Customer hiện có thay vì tạo hồ sơ trùng.
+- `CONVERTED` và `LOST` là trạng thái kết thúc. Chỉ Manager được mở lại `LOST` và phải ghi lý do; không đổi trực tiếp `CONVERTED` sang trạng thái khác.
 
 ## 4.3. Lead Activity Management
 
@@ -316,6 +331,8 @@ Trial có thể dẫn tới:
 - Continue Negotiation.
 - Lost.
 
+MVP: Trial được đặt cho Lead/Customer chưa có Membership; mỗi người được một Trial miễn phí cho cùng dịch vụ tại một Studio. Trial có lịch, sức chứa, trạng thái, người phụ trách và kết quả riêng; hủy Trial phải trả lại chỗ. Trial không tự tạo Membership hoặc quyền sử dụng dịch vụ khác.
+
 ## 4.6. Lead Conversion
 
 ### Flow
@@ -327,9 +344,9 @@ CONVERT
   ↓
 CUSTOMER PROFILE
   ↓
-ACCOUNT
+ACCOUNT / INVITATION (có thể thực hiện sau)
   ↓
-ORDER
+ORDER (khi khách quyết định mua)
   ↓
 PAYMENT
   ↓
@@ -343,6 +360,8 @@ MEMBERSHIP
 - Create Account.
 - Send Invitation.
 - Preserve Lead history.
+
+Chuyển đổi Lead chỉ tạo hoặc liên kết Customer trong cùng Studio và giữ nguyên lịch sử Lead. Tài khoản đăng nhập được liên kết với Customer qua lời mời hoặc xác minh danh tính; không tự tạo Membership. Nếu Customer đã tồn tại, không tạo Customer thứ hai.
 
 ## 4.7. Customer Management
 
@@ -383,6 +402,8 @@ Activity
 ### MVP rule
 Nếu Membership hết hạn trong 7 ngày: → tạo Renewal Opportunity.
 
+Mỗi Membership chỉ có tối đa một cơ hội gia hạn đang mở cho cùng kỳ hết hạn. Khi đã gia hạn hoặc hủy, cơ hội được đóng; không tạo lại ở mỗi lần chạy kiểm tra. Cơ hội gồm Studio, Customer, Membership, ngày hết hạn, người phụ trách và trạng thái liên hệ.
+
 Không bắt buộc dùng ML churn prediction.
 
 ---
@@ -408,6 +429,8 @@ PT_PACKAGE
 - Status.
 
 ## 5.2. Membership Plan Management
+
+Plan thuộc một Studio. Giá, thời hạn, số buổi và quyền lợi được chụp lại trên Order Item lúc mua; sửa Plan sau đó không thay đổi giao dịch hoặc gói đã bán. Plan ngừng bán vẫn hiển thị trong lịch sử.
 
 ### Chức năng
 - Create Plan.
@@ -467,13 +490,13 @@ Staff có thể:
 ```text
 PENDING
 PAID
-FAILED
 CANCELLED
 REFUNDED
 ```
 
 ### Rule
 Total phải được tính và validate ở backend.
+Order có một hoặc nhiều Order Item, mỗi item ghi Plan, số lượng, đơn giá tại thời điểm mua và giảm giá được duyệt. `subtotal = tổng giá item`; `total = max(0, subtotal - discount)`. Chỉ Manager hoặc nhân sự được cấp quyền mới áp dụng giảm giá. Order `PENDING` có thể thanh toán lại sau một Payment thất bại; `FAILED` là trạng thái Payment, không phải Order. Hủy Order đã thanh toán phải đi qua quy trình hoàn tiền.
 
 ## 5.6. Service Activation
 
@@ -491,6 +514,8 @@ MEMBERSHIP / PT PACKAGE ACTIVE
 
 Không activate dịch vụ nếu Payment chưa hợp lệ, ngoại trừ offline payment đã được Staff có quyền xác nhận.
 
+Thanh toán tiền mặt/chuyển khoản chỉ hợp lệ sau khi Staff được cấp quyền xác nhận số tiền và mã tham chiếu. Mỗi Order Item chỉ được kích hoạt một lần, kể cả khi callback hoặc thao tác xác nhận được gửi lặp. Thanh toán một phần không kích hoạt dịch vụ trong MVP. Hoàn tiền toàn phần thu hồi quyền sử dụng chưa tiêu thụ; trường hợp đã sử dụng dịch vụ cần Manager xử lý và lưu quyết định trong Audit Log.
+
 ---
 
 # 6. CORE FUNCTION 3 — MEMBERSHIP & SERVICE ACCESS MANAGEMENT
@@ -507,14 +532,12 @@ Thông tin:
 - Status.
 - Auto Renew nếu hỗ trợ.
 
+Membership thuộc đúng Customer và Studio của Order. Ngày bắt đầu mặc định là ngày kích hoạt, trừ khi Order ghi ngày bắt đầu tương lai. Ngày kết thúc được tính từ thời hạn Plan theo múi giờ của Studio.
+
 ## 6.2. Membership Lifecycle
 
 ```text
 PENDING
- ↓
-ACTIVE
- ↓
-PAUSED
  ↓
 ACTIVE
  ↓
@@ -530,7 +553,6 @@ ACTIVE → CANCELLED
 ```text
 PENDING
 ACTIVE
-PAUSED
 EXPIRED
 CANCELLED
 ```
@@ -551,12 +573,16 @@ CANCELLED
 - Renew.
 - Calculate new end date.
 - Create new transaction.
-- Update membership.
+- Create new membership period.
 - Preserve history.
+
+Gia hạn luôn tạo Order và Payment mới, sau đó tạo kỳ Membership mới liên kết với kỳ trước để giữ lịch sử. Nếu gói cũ còn hiệu lực và cùng Plan, kỳ mới bắt đầu ngay sau ngày kết thúc kỳ cũ; nếu đã hết hạn, bắt đầu từ ngày kích hoạt mới. Đổi Plan là giao dịch đổi gói riêng. Một Payment không được tạo hai kỳ gia hạn.
 
 ## 6.5. Membership Pause / Resume
 
-Nếu business policy hỗ trợ:
+Pause/Resume là tính năng sau MVP. Nếu Studio bật tính năng này về sau, phải xác định số lần và thời gian tạm dừng, cách dời ngày hết hạn và tác động lên Booking đã có.
+
+Chức năng sau MVP:
 - Pause.
 - Resume.
 - Validate allowed period.
@@ -569,6 +595,8 @@ Trước các operation cần membership:
 Is Membership Active?
 Is Membership Within Valid Date?
 Is Customer Eligible?
+Does Plan include requested service?
+Does Membership belong to current Studio?
 ```
 
 Nếu không:
@@ -587,6 +615,8 @@ ACCESS_DENIED
 
 ### Rule
 Nếu Remaining Sessions = 0: → không cho tạo/complete thêm session.
+
+PT Package phải còn hiệu lực ngày, đúng Studio và đúng Customer. Một buổi PT chỉ trừ lượt khi chuyển sang `COMPLETED` lần đầu. Buổi bị hủy trước khi hoàn thành không trừ lượt. Package hết hạn hoặc hết lượt không được đặt buổi mới; buổi đã đặt trước ngày hết hạn phải được hoàn thành trong thời hạn, trừ khi Manager xử lý ngoại lệ.
 
 ---
 
@@ -667,6 +697,8 @@ COMPLETED
 NO_SHOW
 ```
 
+MVP tạo Booking ở `CONFIRMED` khi còn chỗ và Customer đủ quyền; `PENDING` chỉ dùng nếu bổ sung luồng chờ xác nhận sau MVP. `CONFIRMED` giữ chỗ cho đến khi Session kết thúc; check-in tạo Attendance nhưng không đổi ngay Booking thành `COMPLETED`. Sau Session, Booking có Attendance chuyển `COMPLETED`, Booking vắng mặt chuyển `NO_SHOW`. Hủy `CONFIRMED` trước Session trả lại một chỗ; `COMPLETED` và `NO_SHOW` không trả chỗ. Khi Class Session bị hủy, mọi Booking còn hiệu lực chuyển `CANCELLED` và Customer được thông báo.
+
 ## 7.5. Capacity Management
 
 Theo dõi:
@@ -685,9 +717,13 @@ Remaining = 5
 
 Không được vượt Capacity.
 
+Trước khi Session kết thúc, `Booked` là số Booking `CONFIRMED` của Session; `Remaining = Capacity - Booked`. Kiểm tra và tăng số chỗ phải cùng một giao dịch để không vượt Capacity khi nhiều người đặt đồng thời. Sau Session, báo cáo số chỗ đã đặt tính cả Booking `COMPLETED` và `NO_SHOW`.
+
 ## 7.6. Duplicate Booking Prevention
 
 Một Customer không được book cùng một Class Session hai lần.
+
+Quy tắc áp dụng cho Booking đang `CONFIRMED`; sau khi hủy, Customer được đặt lại nếu còn chỗ và vẫn đủ quyền. Không cho đặt Session đã hủy, đã hoàn thành hoặc đã qua giờ bắt đầu. Điều kiện hủy muộn do Studio cấu hình; MVP mặc định cho hủy trước giờ bắt đầu, sau giờ bắt đầu phải do Staff xử lý.
 
 ## 7.7. Concurrency Handling
 
@@ -755,6 +791,8 @@ PT Package Remaining Sessions -= 1
 ```
 
 Phải idempotent để không trừ hai lần.
+
+PT Session chỉ được đặt khi Trainer còn lịch trống, Customer có PT Package còn hiệu lực và còn lượt chưa được giữ chỗ. Số lượt khả dụng = `remaining_sessions - số PT Session SCHEDULED`; đặt lịch và giữ lượt phải cùng giao dịch để không nhận quá số lượt khi có request đồng thời. `SCHEDULED → COMPLETED` trừ đúng một lượt trong cùng giao dịch; `SCHEDULED → CANCELLED` giải phóng lượt giữ chỗ và không trừ lượt. `COMPLETED` không được hoàn thành lại với mã tham chiếu khác. Buổi `NO_SHOW` và hủy muộn do Manager quyết định có trừ lượt hay không, quyết định phải được ghi Audit Log.
 
 ## 8.5. Trainer Client Management
 
@@ -875,9 +913,11 @@ Goal data:
 - Target date.
 - Status.
 
+Goal có mục tiêu định lượng là tính năng sau MVP; MVP chỉ lưu Fitness Goal dạng danh mục trên Customer để phục vụ giáo án và AI.
+
 ## 9.8. Body Metrics
 
-Nếu triển khai:
+Tính năng sau MVP:
 - Weight.
 - Body Fat.
 - Muscle Mass.
@@ -897,6 +937,8 @@ Dashboard:
 
 Không hiển thị metrics nếu chưa có dữ liệu.
 
+MVP Progress tính từ Workout Log và Attendance thật. Khi chưa có dữ liệu, trả về trạng thái rỗng; không tự tạo số liệu mẫu. Biểu đồ cân nặng chỉ bật khi tính năng Body Metrics được triển khai.
+
 ---
 
 # 10. CORE FUNCTION 7 — AI COACHING
@@ -914,6 +956,8 @@ Recent Progress
 ```
 
 Không được truy cập customer khác.
+
+Backend xác định Customer và Studio từ tài khoản đã xác thực, chỉ gửi cho AI dữ liệu cần thiết cho câu hỏi hiện tại. Client không được tự khai Customer ID, chấn thương hoặc số đo để thay thế dữ liệu hồ sơ đã lưu. Lịch sử hội thoại thuộc Customer và Studio tương ứng.
 
 ## 10.2. AI Fitness Assistant
 
@@ -948,9 +992,11 @@ Recommendation phải có:
 ```text
 AI Recommendation
         ↓
-User Review
+Member Review
         ↓
 ACCEPT / DISMISS
+        ↓
+Trainer Review (nếu ACCEPT)
         ↓
 Backend Validation
         ↓
@@ -958,6 +1004,8 @@ Apply Change
 ```
 
 AI không được tự ý mutate workout plan.
+
+MVP: AI chỉ đề xuất thay đổi. Customer có thể lưu gợi ý để Trainer xem; chỉ Trainer được phân công hoặc Manager được áp dụng thay đổi vào giáo án đang hoạt động. Mọi thay đổi phải qua kiểm tra quyền, tính hợp lệ của bài tập và ghi lịch sử phiên bản giáo án.
 
 ## 10.5. AI Progress Summary
 
@@ -1001,12 +1049,16 @@ Fields:
 - Status.
 - Paid At.
 
+Trạng thái Payment trong MVP: `PENDING`, `SUCCESS`, `FAILED`, `REFUNDED`. Mỗi lần thử thanh toán là một Payment riêng; `reference` duy nhất trong phạm vi nhà cung cấp/phương thức. Số tiền thu hợp lệ của Order phải bằng `total` trước khi Order thành `PAID` và kích hoạt dịch vụ. MVP không hỗ trợ thanh toán một phần. Khi hoàn tiền, ghi riêng số tiền và thời điểm hoàn để báo cáo vẫn nhận biết được khoản đã thu ban đầu.
+
 ## 11.2. Payment Methods
 
 MVP:
 - Cash.
 - Bank Transfer.
 - Sandbox payment.
+
+Cash và Bank Transfer cần Staff có quyền xác nhận thủ công, kèm người xác nhận và thời điểm. Sandbox payment chỉ thành công sau khi backend xác minh callback hoặc kết quả từ nhà cung cấp; kết quả do trình duyệt gửi không đủ để kích hoạt dịch vụ.
 
 Optional:
 - VNPay Sandbox.
@@ -1035,6 +1087,8 @@ Service Activation
 
 Duplicate callback không được tạo duplicate business effect.
 
+Callback phải xác minh nguồn gửi, số tiền, Order và mã giao dịch; cùng một `reference` chỉ được ghi nhận một lần. Callback lặp trả về kết quả đã xử lý, không tạo Payment, Membership hoặc PT Package mới.
+
 ## 11.6. Payment History
 
 Member:
@@ -1054,6 +1108,8 @@ Reception:
 - Verify membership.
 - Verify booking nếu cần.
 - Check-in.
+
+Check-in lớp yêu cầu Booking `CONFIRMED`, đúng Customer và đúng Session; check-in khu vực tập yêu cầu Membership còn hiệu lực và có quyền vào khu vực đó. Mỗi Booking chỉ có một Attendance. MVP cho check-in từ 30 phút trước đến 15 phút sau giờ bắt đầu; ngoại lệ cần Staff có quyền ghi lý do. Check-in không tự gia hạn Membership.
 
 ## 12.2. Attendance
 
@@ -1096,6 +1152,15 @@ KPI:
 - New Leads.
 - Conversion Rate.
 - Class Occupancy.
+
+Tất cả KPI mặc định chỉ tính dữ liệu Studio hiện tại theo múi giờ Studio, hiển thị kỳ lọc và thời điểm cập nhật. Định nghĩa MVP:
+
+- `Revenue`: tổng tiền được ghi nhận đã thu trong kỳ, trừ số tiền hoàn thực tế trong kỳ; vẫn tính khoản thu ban đầu kể cả khi Payment sau đó chuyển `REFUNDED`. Không lấy tổng Order chưa thanh toán.
+- `Active Members`: số Customer duy nhất có Membership `ACTIVE`, trong thời hạn và chưa bị thu hồi tại thời điểm xem.
+- `New Leads`: số Lead được tạo trong kỳ.
+- `Conversion Rate`: số Lead tạo trong kỳ đã `CONVERTED` chia số Lead tạo trong kỳ; hiển thị `0%` nếu mẫu số bằng 0.
+- `Class Occupancy`: tổng Booking `CONFIRMED`, `COMPLETED` và `NO_SHOW` của các Session trong kỳ chia tổng sức chứa các Session không bị hủy trong kỳ; hiển thị `0%` nếu sức chứa bằng 0.
+- `MRR` chỉ hiển thị nếu có sản phẩm thu phí định kỳ và quy tắc quy đổi doanh thu tháng; không dùng toàn bộ tiền thu trong tháng để gọi là MRR.
 
 ## 13.2. CRM Report
 
@@ -1158,12 +1223,15 @@ ADMIN
 MANAGER
 RECEPTIONIST
 TRAINER
-CUSTOMER
+MEMBER
+PLATFORM_ADMIN
 ```
 
 Backend bắt buộc kiểm tra authorization.
 
 Frontend chỉ dùng để ẩn/hiện UI.
+
+`MEMBER` là vai trò tài khoản dành cho Customer tại một Studio, không chứng minh Membership đang hiệu lực. `ADMIN` quản trị Studio được cấp quyền; `PLATFORM_ADMIN` tạo Studio và cấp quyền quản trị Studio. Một User có thể có vai trò khác nhau ở các Studio. Mỗi request nghiệp vụ phải kiểm tra cả vai trò ở Studio đang chọn và quyền truy cập đúng Customer/Trainer được phân công.
 
 ## 14.3. User Management
 
@@ -1318,6 +1386,13 @@ Ví dụ:
 - Reports.
 - Renewal.
 
+### Quy tắc nghiệm thu MVP
+
+- Một Studio không thể đọc hoặc sửa dữ liệu của Studio khác qua API, kể cả khi biết ID bản ghi.
+- Customer có thể hoàn thành luồng Order → Payment hợp lệ → Membership/PT Package → sử dụng đúng dịch vụ được mua.
+- Booking và PT không vượt sức chứa/số lượt khi có request đồng thời; callback Payment và hoàn thành PT lặp không tạo tác động trùng.
+- Mọi số liệu Dashboard/Progress có nguồn dữ liệu thật; trường hợp chưa có dữ liệu hiển thị trạng thái rỗng.
+
 ---
 
 # 18. STRETCH FEATURES
@@ -1329,6 +1404,7 @@ Chỉ làm sau khi MVP hoàn chỉnh:
 - RAG.
 - Body Metrics.
 - Customer Goals.
+- Membership Pause / Resume.
 - Churn Risk.
 - AI Progress Summary nâng cao.
 - Multi-branch.
@@ -1354,7 +1430,7 @@ Không triển khai trong đồ án:
 - Real-time Heart Rate.
 - Medical Diagnosis.
 - Advanced ML.
-- Microservices.
+- Tách CRM, Commerce và Operations thành các microservice riêng; dịch vụ AI độc lập được phép dùng.
 - Kubernetes.
 
 ---
@@ -1398,8 +1474,8 @@ FITOS
 │   ├── Create
 │   ├── Activate
 │   ├── View
-│   ├── Pause
-│   ├── Resume
+│   ├── Pause [Sau MVP]
+│   ├── Resume [Sau MVP]
 │   ├── Renew
 │   ├── Cancel
 │   ├── Expiration
@@ -1430,8 +1506,8 @@ FITOS
 │   ├── Workout Execution
 │   ├── Workout Log
 │   ├── Workout History
-│   ├── Goals
-│   ├── Body Metrics
+│   ├── Goals [Định lượng sau MVP]
+│   ├── Body Metrics [Sau MVP]
 │   └── Progress
 │
 ├── 7. AI COACH
@@ -1524,15 +1600,15 @@ Lead
   ↓
 Customer
   ↓
-Member
-  ↓
-Sales
+Order
   ↓
 Payment
   ↓
-Membership
+Membership / PT Package
   ↓
-Booking
+Member sử dụng dịch vụ
+  ↓
+Booking / PT
   ↓
 Training
   ↓

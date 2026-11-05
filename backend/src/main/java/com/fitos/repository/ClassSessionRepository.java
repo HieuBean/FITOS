@@ -1,25 +1,30 @@
 package com.fitos.repository;
 
 import com.fitos.model.ClassSession;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClassSessionRepository extends JpaRepository<ClassSession, Long> {
-    List<ClassSession> findByFitnessClassId(Long classId);
-    
-    @Query("SELECT s FROM ClassSession s WHERE s.trainer.id = :trainerId AND s.startTime >= :fromTime AND s.endTime <= :toTime")
-    List<ClassSession> findByTrainerAndRange(@Param("trainerId") Long trainerId,
-                                            @Param("fromTime") LocalDateTime fromTime,
-                                            @Param("toTime") LocalDateTime toTime);
 
-    @Query("SELECT s FROM ClassSession s WHERE s.startTime >= :fromTime AND s.endTime <= :toTime ORDER BY s.startTime ASC")
-    List<ClassSession> findByDateRange(@Param("fromTime") LocalDateTime fromTime,
-                                      @Param("toTime") LocalDateTime toTime);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT cs FROM ClassSession cs WHERE cs.id = :id")
+    Optional<ClassSession> findByIdWithLock(@Param("id") Long id);
+
+    Optional<ClassSession> findByIdAndStudioId(Long id, Long studioId);
+
+    List<ClassSession> findByStudioIdAndSessionDateBetweenOrderBySessionDateAscStartTimeAsc(
+            Long studioId, LocalDate from, LocalDate to);
+
+    List<ClassSession> findByStudioIdAndSessionDateOrderByStartTimeAsc(Long studioId, LocalDate date);
+
+    List<ClassSession> findByClassIdAndStudioIdOrderBySessionDateAscStartTimeAsc(Long classId, Long studioId);
 }
-

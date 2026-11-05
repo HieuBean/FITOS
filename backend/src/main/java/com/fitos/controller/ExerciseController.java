@@ -1,53 +1,49 @@
 package com.fitos.controller;
 
-import com.fitos.dto.ExerciseDto;
-import com.fitos.service.ExerciseService;
+import com.fitos.dto.ops.OpsDtos.ExerciseRequest;
+import com.fitos.dto.ops.OpsDtos.ExerciseResponse;
+import com.fitos.service.OpsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+/** Task #58: thư viện bài tập (30 bài seed sẵn trong V4_1). */
 @RestController
 @RequestMapping("/api/exercises")
 @RequiredArgsConstructor
-@Tag(name = "Exercises API", description = "Quản lý danh mục bài tập (dùng cho Workout Builder & Exercise Drawer)")
+@Tag(name = "Exercises", description = "Thư viện bài tập")
 public class ExerciseController {
 
-    private final ExerciseService exerciseService;
+    private final OpsService opsService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách bài tập (hỗ trợ lọc theo muscleGroup, difficulty, phân trang)")
-    public ResponseEntity<Page<ExerciseDto.Response>> getAll(
-            @RequestParam(required = false) String muscleGroup,
-            @RequestParam(required = false) String difficulty,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
-        return ResponseEntity.ok(exerciseService.findAll(muscleGroup, difficulty, PageRequest.of(page, size)));
-    }
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Xem chi tiết bài tập")
-    public ResponseEntity<ExerciseDto.Response> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(exerciseService.findById(id));
+    @Operation(summary = "Danh sách bài tập, lọc theo nhóm cơ / category")
+    public ResponseEntity<List<ExerciseResponse>> list(
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "muscleGroup", required = false) String muscleGroup) {
+        String filter = category != null ? category : muscleGroup;
+        return ResponseEntity.ok(opsService.listExercises(filter));
     }
 
     @PostMapping
-    @Operation(summary = "Tạo mới bài tập")
-    public ResponseEntity<ExerciseDto.Response> create(@Valid @RequestBody ExerciseDto.CreateRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(exerciseService.create(req));
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'TRAINER')")
+    @Operation(summary = "Thêm bài tập mới")
+    public ResponseEntity<ExerciseResponse> create(@Valid @RequestBody ExerciseRequest req) {
+        return new ResponseEntity<>(opsService.createExercise(req), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'TRAINER')")
     @Operation(summary = "Cập nhật bài tập")
-    public ResponseEntity<ExerciseDto.Response> update(
-            @PathVariable Long id,
-            @RequestBody ExerciseDto.UpdateRequest req) {
-        return ResponseEntity.ok(exerciseService.update(id, req));
+    public ResponseEntity<ExerciseResponse> update(@PathVariable("id") Long id,
+                                                   @Valid @RequestBody ExerciseRequest req) {
+        return ResponseEntity.ok(opsService.updateExercise(id, req));
     }
 }
-

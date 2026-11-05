@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -19,15 +18,31 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fitos.security.CustomUserDetailsService;
+import com.fitos.security.JwtTokenProvider;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+
 @WebMvcTest(StudioController.class)
-@Import(com.fitos.config.SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class StudioControllerTest {
+
+    @MockBean
+    private com.fitos.repository.UserRepository userRepository;
+
+    @MockBean
+    private com.fitos.service.StudioAccessService studioAccessService;
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
     private StudioRepository studioRepository;
+
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
 
     @Autowired
     private ObjectMapper objectMapper;

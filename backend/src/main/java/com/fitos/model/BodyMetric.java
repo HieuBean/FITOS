@@ -2,12 +2,16 @@ package com.fitos.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "body_metrics")
+@Table(name = "body_metrics", uniqueConstraints = {
+    @UniqueConstraint(name = "uq_body_metrics_date", columnNames = {"customer_id", "recorded_date"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,34 +23,42 @@ public class BodyMetric {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "studio_id", nullable = false)
+    private Long studioId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @Column(name = "weight_kg")
+    @Builder.Default
+    @Column(name = "recorded_date", nullable = false)
+    private LocalDate recordedDate = LocalDate.now();
+
+    @Column(name = "weight_kg", nullable = false, precision = 5, scale = 2)
     private BigDecimal weightKg;
 
-    @Column(name = "height_cm")
+    @Column(name = "height_cm", precision = 5, scale = 2)
     private BigDecimal heightCm;
 
-    @Column(name = "body_fat_pct")
-    private BigDecimal bodyFatPct;
+    @Column(name = "body_fat_percent", precision = 4, scale = 2)
+    private BigDecimal bodyFatPercent;
 
-    @Column(name = "muscle_mass_kg")
+    @Column(name = "muscle_mass_kg", precision = 5, scale = 2)
     private BigDecimal muscleMassKg;
 
-    private BigDecimal bmi;
-
-    @Column(name = "waist_cm")
-    private BigDecimal waistCm;
-
-    @Column(name = "chest_cm")
-    private BigDecimal chestCm;
-
-    @Builder.Default
-    @Column(name = "recorded_at", nullable = false)
-    private LocalDateTime recordedAt = LocalDateTime.now();
-
+    @Column(length = 255)
     private String notes;
-}
 
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
+
+    // Compatibility methods
+    public BigDecimal getBodyFatPct() {
+        return bodyFatPercent;
+    }
+
+    public void setBodyFatPct(BigDecimal pct) {
+        this.bodyFatPercent = pct;
+    }
+}

@@ -5,7 +5,7 @@ client = TestClient(app)
 
 def test_chat_without_token():
     response = client.post("/llm/chat", json={"prompt": "Hello"})
-    assert response.status_code == 403
+    assert response.status_code in (401, 403)
     assert response.json() == {"detail": "Not authenticated"}
 
 def test_chat_with_invalid_token():

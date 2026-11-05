@@ -3,7 +3,8 @@ package com.fitos.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "class_sessions")
@@ -18,36 +19,52 @@ public class ClassSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "class_id", nullable = false)
-    private FitnessClass fitnessClass;
+    @Column(name = "studio_id", nullable = false)
+    private Long studioId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trainer_id")
-    private Trainer trainer;
+    @Column(name = "class_id", nullable = false)
+    private Long classId;
+
+    @Column(name = "trainer_id")
+    private Long trainerId;
+
+    @Column(name = "session_date", nullable = false)
+    private LocalDate sessionDate;
 
     @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
+    private LocalTime startTime;
 
     @Column(name = "end_time", nullable = false)
-    private LocalDateTime endTime;
+    private LocalTime endTime;
 
-    @Column(name = "max_capacity")
-    private Integer maxCapacity;
-
+    @Column(name = "room", length = 50)
     @Builder.Default
-    @Column(name = "current_bookings")
-    private Integer currentBookings = 0;
+    private String room = "Studio 1";
 
+    @Column(name = "capacity", nullable = false)
+    private Integer capacity;
+
+    @Column(name = "booked_count", nullable = false)
     @Builder.Default
-    @Column(nullable = false)
-    private String status = "SCHEDULED"; // SCHEDULED, COMPLETED, CANCELLED
+    private Integer bookedCount = 0;
 
-    @Column(name = "cancel_reason")
-    private String cancelReason;
-
+    @Column(name = "status", length = 50, nullable = false)
     @Builder.Default
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private String status = "SCHEDULED";
+
+    public Integer getMaxCapacity() {
+        return capacity;
+    }
+
+    public void setMaxCapacity(Integer maxCapacity) {
+        this.capacity = maxCapacity;
+    }
+
+    public Integer getCurrentBookings() {
+        return bookedCount;
+    }
+
+    public void setCurrentBookings(Integer currentBookings) {
+        this.bookedCount = currentBookings;
+    }
 }
-

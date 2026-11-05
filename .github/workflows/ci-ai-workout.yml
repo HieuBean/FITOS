@@ -1,0 +1,61 @@
+name: CI - AI Workout Microservice
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+    paths:
+      - 'ai-workout/**'
+      - '.github/workflows/ci-ai-workout.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+    paths:
+      - 'ai-workout/**'
+      - '.github/workflows/ci-ai-workout.yml'
+
+jobs:
+  test:
+    name: Pytest Automated Suite
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ai-workout
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'ai-workout/requirements.txt'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-mock
+
+      - name: Run Pytest Test Suite
+        env:
+          AI_SERVICE_TOKEN: fitos-ai-token
+          OPENAI_API_KEY: ""
+          GEMINI_API_KEY: ""
+        run: |
+          python -m pytest tests/ -v --junitxml=results.xml
+
+      - name: Upload Test Results Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-results
+          path: ai-workout/results.xml
+          retention-days: 7

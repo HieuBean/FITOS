@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,44 +56,46 @@ public class WorkoutAIService {
                 .build();
         messageRepository.save(userMsg);
 
-        // 2. Nạp context thể lực từ DB
+        // 2. Nạp Fitness Context
         Map<String, Object> fitnessContext = buildCustomerFitnessContext(customer);
 
-        Map<String, Object> aiPayload = new HashMap<>();
-        aiPayload.put("customer_id", customer.getId());
-        aiPayload.put("message", req.getMessage());
-        aiPayload.put("fitness_context", fitnessContext);
+        // 3. Chuẩn bị lịch sử hội thoại gần nhất
+        List<AiMessage> pastMessages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.getId());
+        List<Map<String, String>> history = pastMessages.stream()
+                .map(m -> Map.of("role", m.getRole(), "content", m.getContent()))
+                .collect(Collectors.toList());
 
-        // 3. Gọi microservice Python ai-workout (port 8004) qua WebClient/RestClient
-        Map<String, Object> aiResponse = workoutAIClient.chat(aiPayload);
+        // 4. Chuẩn bị payload gửi sang ai-workout
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("message", req.getMessage());
+        payload.put("fitness_profile", fitnessContext);
+        payload.put("conversation_history", history);
 
-        String replyText = (String) aiResponse.getOrDefault("reply", "Cảm ơn bạn đã liên hệ!");
-        @SuppressWarnings("unchecked")
-        List<String> suggestions = (List<String>) aiResponse.getOrDefault("suggestions", List.of());
-        Boolean isFallback = (Boolean) aiResponse.getOrDefault("fallback", false);
+        // 5. Gọi AI service
+        Map<String, Object> aiResponse = workoutAIClient.chat(payload);
 
-        // 4. Lưu phản hồi trợ lý AI vào DB
-        AiMessage botMsg = AiMessage.builder()
+        String reply = (String) aiResponse.getOrDefault("reply", "Tôi chưa có phản hồi thích hợp vào lúc này.");
+        List<String> suggestedActions = (List<String>) aiResponse.getOrDefault("suggested_actions", Collections.emptyList());
+
+        // 6. Lưu câu trả lời từ AI
+        AiMessage assistantMsg = AiMessage.builder()
                 .conversation(conversation)
                 .role("assistant")
-                .content(replyText)
-                .modelUsed("gpt-4o-mini")
+                .content(reply)
                 .createdAt(LocalDateTime.now())
                 .build();
-        messageRepository.save(botMsg);
+        messageRepository.save(assistantMsg);
 
         return AIDto.ChatResponse.builder()
                 .conversationId(conversation.getId())
-                .reply(replyText)
-                .suggestions(suggestions)
-                .fallback(isFallback)
+                .reply(reply)
+                .suggestions(suggestedActions)
                 .build();
     }
 
     /**
-     * Task 70: Lấy danh sách hội thoại của người dùng
+     * Lấy danh sách cuộc hội thoại của hội viên
      */
-    @Transactional(readOnly = true)
     public List<AIDto.ConversationItem> getCustomerConversations(Long customerId) {
         return conversationRepository.findByCustomerIdOrderByStartedAtDesc(customerId).stream()
                 .map(c -> AIDto.ConversationItem.builder()
@@ -100,31 +103,26 @@ public class WorkoutAIService {
                         .service(c.getService())
                         .title(c.getTitle())
                         .startedAt(c.getStartedAt())
-                        .endedAt(c.getEndedAt())
-                        .messages(c.getMessages() != null ?
-                                c.getMessages().stream().map(m -> AIDto.MessageItem.builder()
-                                        .id(m.getId())
-                                        .role(m.getRole())
-                                        .content(m.getContent())
-                                        .createdAt(m.getCreatedAt())
-                                        .build()).collect(Collectors.toList()) : List.of())
                         .build())
                 .collect(Collectors.toList());
     }
 
     /**
-     * Task 70: Tạo gợi ý kế hoạch từ AI và lưu bản ghi
+     * Task 70: Sinh gợi ý điều chỉnh giáo án từ AI (ai-workout service)
+     * Kết quả được lưu vào bảng ai_recommendations (JSONB)
      */
     @Transactional
-    public AIDto.RecommendResponse createRecommendation(AIDto.RecommendRequest req) {
-        Customer customer = customerRepository.findById(req.getCustomerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + req.getCustomerId()));
+    public AIDto.RecommendResponse generateRecommendation(Long customerId, String goal, String targetMuscle, String fitnessLevel) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + customerId));
+
+        Map<String, Object> fitnessContext = buildCustomerFitnessContext(customer);
+        if (goal != null) fitnessContext.put("goal", goal);
+        if (targetMuscle != null) fitnessContext.put("target_muscle_group", targetMuscle);
+        if (fitnessLevel != null) fitnessContext.put("current_fitness_level", fitnessLevel);
 
         Map<String, Object> payload = new HashMap<>();
-        payload.put("customer_id", customer.getId());
-        payload.put("goal", req.getGoal());
-        payload.put("target_muscle", req.getTargetMuscleGroup());
-        payload.put("fitness_level", req.getCurrentFitnessLevel());
+        payload.put("fitness_profile", fitnessContext);
 
         Map<String, Object> aiResult = workoutAIClient.recommend(payload);
 
@@ -132,16 +130,16 @@ public class WorkoutAIService {
         try {
             jsonString = objectMapper.writeValueAsString(aiResult);
         } catch (Exception e) {
+            log.error("Error serializing AI recommend result", e);
             jsonString = "{}";
         }
 
         AiRecommendation rec = AiRecommendation.builder()
-                .customer(customer)
-                .service("WORKOUT")
-                .recType("WORKOUT_PLAN_OPTIMIZE")
-                .recommendation(jsonString)
+                .customerId(customer.getId())
+                .studioId(customer.getStudioId() != null ? customer.getStudioId() : 1L)
+                .type("WORKOUT_CHANGE")
+                .suggestedChanges(jsonString)
                 .status("PENDING")
-                .createdAt(LocalDateTime.now())
                 .build();
 
         AiRecommendation saved = recommendationRepository.save(rec);
@@ -151,7 +149,7 @@ public class WorkoutAIService {
                 .title((String) aiResult.getOrDefault("title", "Gợi ý cá nhân hóa từ FITOS AI"))
                 .rawJson(jsonString)
                 .status(saved.getStatus())
-                .createdAt(saved.getCreatedAt())
+                .createdAt(saved.getCreatedAt() != null ? LocalDateTime.ofInstant(saved.getCreatedAt(), ZoneId.systemDefault()) : LocalDateTime.now())
                 .build();
     }
 
@@ -190,7 +188,7 @@ public class WorkoutAIService {
                     ctx.put("goal", p.getGoal());
                 });
 
-        bodyMetricRepository.findFirstByCustomerIdOrderByRecordedAtDesc(customer.getId())
+        bodyMetricRepository.findFirstByCustomerIdOrderByRecordedDateDesc(customer.getId())
                 .ifPresent(m -> {
                     ctx.put("weight_kg", m.getWeightKg());
                     ctx.put("height_cm", m.getHeightCm());
@@ -200,4 +198,3 @@ public class WorkoutAIService {
         return ctx;
     }
 }
-
