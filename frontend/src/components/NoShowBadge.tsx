@@ -6,50 +6,67 @@ import api from '@/lib/api';
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
 interface NoShowRisk {
-  sessionId: number;
+  sessionId?: number;
   customerId?: number | null;
   probability: number;
   riskLevel: RiskLevel | string;
   reason: string;
-  source: string;
+  source?: string;
 }
 
-const styles: Record<RiskLevel, { chip: string; bar: string; label: string }> = {
+const styles: Record<RiskLevel, { chip: string; bar: string; label: string; dot: string; bg: string }> = {
   HIGH: {
-    chip: 'bg-red-100 text-red-700 border-red-200',
-    bar: 'bg-red-500',
-    label: 'Nguy cơ cao',
+    chip: 'bg-rose-50 text-rose-700 border-rose-200',
+    bar: 'bg-rose-500',
+    dot: 'bg-rose-500 animate-pulse',
+    bg: 'bg-rose-50 border-rose-200 text-rose-700',
+    label: 'Nguy cơ cao (High Risk)',
   },
   MEDIUM: {
-    chip: 'bg-amber-100 text-amber-800 border-amber-200',
+    chip: 'bg-amber-50 text-amber-800 border-amber-200',
     bar: 'bg-amber-500',
-    label: 'Trung bình',
+    dot: 'bg-amber-500',
+    bg: 'bg-amber-50 border-amber-200 text-amber-700',
+    label: 'Trung bình (Medium Risk)',
   },
   LOW: {
-    chip: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    chip: 'bg-emerald-50 text-emerald-800 border-emerald-200',
     bar: 'bg-emerald-500',
-    label: 'Thấp',
+    dot: 'bg-emerald-500',
+    bg: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+    label: 'Thấp (Low Risk)',
   },
 };
 
-interface Props {
-  sessionId: number;
+export interface NoShowBadgeProps {
+  sessionId?: number;
   customerId?: number;
-  /** Gọi API ngay khi mount (mặc định true). */
   autoLoad?: boolean;
   compact?: boolean;
+  probability?: number | null;
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+  showPercentage?: boolean;
 }
 
 /**
- * Task #96 — badge dự đoán no-show. Gọi `/api/ai/noshow-risk`, hiển thị xác suất,
- * mức rủi ro và lý do; lỗi API không được làm vỡ bảng bookings.
+ * Task #94 & #96 — Unified NoShowBadge
+ * Supports both direct probability/riskLevel injection and async sessionId fetching.
  */
-export default function NoShowBadge({ sessionId, customerId, autoLoad = true, compact = false }: Props) {
+export default function NoShowBadge({
+  sessionId,
+  customerId,
+  autoLoad = true,
+  compact = false,
+  probability,
+  riskLevel,
+  showPercentage = true,
+}: NoShowBadgeProps) {
   const [risk, setRisk] = useState<NoShowRisk | null>(null);
-  const [isLoading, setIsLoading] = useState(autoLoad);
+  const [isLoading, setIsLoading] = useState(sessionId != null && probability == null && autoLoad);
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
+    if (!sessionId) return;
     setIsLoading(true);
     setFailed(false);
     try {
@@ -59,7 +76,6 @@ export default function NoShowBadge({ sessionId, customerId, autoLoad = true, co
       });
       setRisk(data);
     } catch (err) {
-      // Dự đoán là thông tin phụ — im lặng và ẩn badge
       console.warn('Không lấy được dự đoán no-show:', err);
       setRisk(null);
       setFailed(true);
@@ -69,10 +85,42 @@ export default function NoShowBadge({ sessionId, customerId, autoLoad = true, co
   }, [sessionId, customerId]);
 
   useEffect(() => {
-    if (autoLoad) {
+    if (probability == null && sessionId != null && autoLoad) {
       load();
     }
-  }, [autoLoad, load]);
+  }, [sessionId, probability, autoLoad, load]);
+
+  // If direct probability or riskLevel provided
+  if (probability != null || riskLevel) {
+    let level: RiskLevel = riskLevel || 'LOW';
+    let percentage = 0;
+
+    if (probability != null) {
+      percentage = Math.round(probability * 100);
+      if (probability >= 0.6) {
+        level = 'HIGH';
+      } else if (probability >= 0.3) {
+        level = 'MEDIUM';
+      } else {
+        level = 'LOW';
+      }
+    }
+
+    const currentStyle = styles[level] || styles.LOW;
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${currentStyle.bg}`}
+        title={`AI No-show prediction: ${percentage}% likelihood of cancellation or no-show`}
+      >
+        <span className={`w-1.5 h-1.5 rounded-full ${currentStyle.dot}`} />
+        <span>{currentStyle.label}</span>
+        {showPercentage && probability != null && (
+          <span className="opacity-75 font-normal">({percentage}%)</span>
+        )}
+      </span>
+    );
+  }
 
   if (isLoading) {
     return <span className="text-[10px] text-[#8A8E85]">đang tính…</span>;

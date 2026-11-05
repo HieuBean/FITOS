@@ -1,4 +1,4 @@
-﻿package com.fitos.service;
+package com.fitos.service;
 
 import com.fitos.dto.progress.BodyMetricRequest;
 import com.fitos.dto.progress.BodyMetricResponse;

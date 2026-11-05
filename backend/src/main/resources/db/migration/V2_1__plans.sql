@@ -1,5 +1,5 @@
 -- V2.1: Service Plans Catalog (Memberships & PT Packages)
--- Author: Member B (Commerce & Plans)
+-- Author: Member B (Commerce & Plans) & Team Merged
 
 CREATE TABLE IF NOT EXISTS service_plans (
     id             BIGSERIAL PRIMARY KEY,
@@ -9,8 +9,9 @@ CREATE TABLE IF NOT EXISTS service_plans (
     price          NUMERIC(12, 2) NOT NULL CHECK (price >= 0),
     duration_days  INT            NOT NULL CHECK (duration_days > 0),
     session_count  INT            DEFAULT NULL CHECK (session_count IS NULL OR session_count > 0),
+    total_sessions INT            DEFAULT NULL CHECK (total_sessions IS NULL OR total_sessions > 0),
     description    TEXT,
-    features       JSONB,
+    features       JSONB          DEFAULT '[]'::jsonb,
     is_active      BOOLEAN        NOT NULL DEFAULT TRUE,
     created_at     TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -19,12 +20,13 @@ CREATE TABLE IF NOT EXISTS service_plans (
 CREATE INDEX IF NOT EXISTS idx_service_plans_type_active ON service_plans(plan_type, is_active);
 
 -- Seed standard Membership Plans & PT Packages
-INSERT INTO service_plans (name, plan_type, price, duration_days, session_count, description, features) VALUES
+INSERT INTO service_plans (name, plan_type, price, duration_days, session_count, total_sessions, description, features) VALUES
 (
     'Move',
     'MEMBERSHIP',
     29.00,
     30,
+    NULL,
     NULL,
     'Perfect for getting started with studio workouts.',
     '["Up to 8 classes/month", "App access", "Progress tracking", "Community access"]'::jsonb
@@ -35,6 +37,7 @@ INSERT INTO service_plans (name, plan_type, price, duration_days, session_count,
     49.00,
     30,
     NULL,
+    NULL,
     'Our most popular plan with unlimited classes and AI coaching.',
     '["Unlimited classes", "AI coaching", "Priority booking", "Nutrition guidance", "Monthly check-in"]'::jsonb
 ),
@@ -43,6 +46,7 @@ INSERT INTO service_plans (name, plan_type, price, duration_days, session_count,
     'MEMBERSHIP',
     89.00,
     30,
+    NULL,
     NULL,
     'Maximum results with personal training included.',
     '["Unlimited classes", "4 PT sessions/month", "Custom programme", "Body composition tracking", "Direct trainer access"]'::jsonb
@@ -53,6 +57,7 @@ INSERT INTO service_plans (name, plan_type, price, duration_days, session_count,
     150.00,
     60,
     5,
+    5,
     '5 private personal training sessions for beginners.',
     '["5 1-on-1 PT sessions", "Fitness assessment", "Custom workout prescription"]'::jsonb
 ),
@@ -62,6 +67,7 @@ INSERT INTO service_plans (name, plan_type, price, duration_days, session_count,
     280.00,
     90,
     10,
+    10,
     '10 personal training sessions for steady progression.',
     '["10 1-on-1 PT sessions", "Nutrition review", "Bi-weekly body metrics analysis"]'::jsonb
 ),
@@ -70,6 +76,7 @@ INSERT INTO service_plans (name, plan_type, price, duration_days, session_count,
     'PT_PACKAGE',
     500.00,
     180,
+    20,
     20,
     '20 comprehensive coaching sessions for maximum body transformation.',
     '["20 1-on-1 PT sessions", "Dedicated coach", "Full nutrition & macro plan", "24/7 AI & coach chat"]'::jsonb

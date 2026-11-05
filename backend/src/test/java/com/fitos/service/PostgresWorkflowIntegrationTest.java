@@ -197,7 +197,8 @@ class PostgresWorkflowIntegrationTest {
 
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
-        try (var pool = Executors.newFixedThreadPool(2)) {
+        var pool = Executors.newFixedThreadPool(2);
+        try {
             var one = pool.submit(() -> bookAfterGate(first, session, ready, start));
             var two = pool.submit(() -> bookAfterGate(second, session, ready, start));
             assertTrue(ready.await(5, TimeUnit.SECONDS));
@@ -212,6 +213,8 @@ class PostgresWorkflowIntegrationTest {
                     () -> checkIns.checkIn(booked.getCustomerId(), booked.getId(), "QR"));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM attendance WHERE booking_id = ?", Integer.class, booked.getId()));
             assertEquals(1, attendance.findByCustomerIdOrderByCheckinTimeDesc(booked.getCustomerId()).size());
+        } finally {
+            pool.shutdown();
         }
 
         Long rebookSession = jdbc.queryForObject(

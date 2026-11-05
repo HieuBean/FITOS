@@ -7,13 +7,14 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000,
 });
 
 // Request interceptor to attach JWT token
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('fitos_access_token');
+      const token = localStorage.getItem('fitos_access_token') || localStorage.getItem('fitos_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -44,6 +45,7 @@ api.interceptors.response.use(
             localStorage.removeItem('fitos_access_token');
             localStorage.removeItem('fitos_refresh_token');
             localStorage.removeItem('fitos_user');
+            localStorage.removeItem('fitos_token');
             document.cookie = 'fitos_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
             if (!window.location.pathname.startsWith('/login')) {
               window.location.href = '/login';
@@ -56,6 +58,7 @@ api.interceptors.response.use(
   }
 );
 
+export const apiClient = api;
 export default api;
 
 // ==========================================
@@ -178,11 +181,15 @@ export async function getExercises(muscleGroup?: string): Promise<Exercise[]> {
     console.warn('API getExercises fallback:', err);
     return [
       { id: 1, name: 'Barbell Bench Press', description: 'Nằm ngửa đẩy tạ đòn thẳng lên', muscleGroup: 'CHEST', equipment: 'Barbell', difficulty: 'INTERMEDIATE' },
-      { id: 2, name: 'Incline Dumbbell Press', description: 'Đẩy tạ đôi trên ghế dốc', muscleGroup: 'CHEST', equipment: 'Dumbbell', difficulty: 'BEGINNER' },
-      { id: 3, name: 'Barbell Back Squat', description: 'Gánh tạ đòn ngồi xổm sâu', muscleGroup: 'LEGS', equipment: 'Barbell', difficulty: 'INTERMEDIATE' },
-      { id: 4, name: 'Conventional Deadlift', description: 'Kéo tạ đòn từ sàn đứng thẳng', muscleGroup: 'BACK', equipment: 'Barbell', difficulty: 'ADVANCED' },
-      { id: 5, name: 'Pull Up', description: 'Đu xà kéo xô lưng', muscleGroup: 'BACK', equipment: 'Bodyweight', difficulty: 'INTERMEDIATE' },
-      { id: 6, name: 'Overhead Shoulder Press', description: 'Đẩy tạ qua đầu tập cơ vai', muscleGroup: 'SHOULDERS', equipment: 'Barbell', difficulty: 'INTERMEDIATE' }
+      { id: 2, name: 'Incline Dumbbell Press', description: 'Đẩy tạ đơn ghế dốc lên trên', muscleGroup: 'CHEST', equipment: 'Dumbbell', difficulty: 'INTERMEDIATE' },
+      { id: 3, name: 'Cable Crossover', description: 'Kéo cáp ép ngực', muscleGroup: 'CHEST', equipment: 'Cable', difficulty: 'BEGINNER' },
+      { id: 7, name: 'Barbell Back Squat', description: 'Gánh tạ đòn ngồi xổm sâu', muscleGroup: 'LEGS', equipment: 'Barbell', difficulty: 'ADVANCED' },
+      { id: 8, name: 'Leg Press', description: 'Đạp đùi máy nghiêng 45 độ', muscleGroup: 'LEGS', equipment: 'Machine', difficulty: 'BEGINNER' },
+      { id: 9, name: 'Romanian Deadlift', description: 'Kéo tạ đòn gập hông kéo căng cơ đùi sau', muscleGroup: 'LEGS', equipment: 'Barbell', difficulty: 'INTERMEDIATE' },
+      { id: 10, name: 'Overhead Press (OHP)', description: 'Đẩy tạ đòn qua đầu đứng thẳng', muscleGroup: 'SHOULDERS', equipment: 'Barbell', difficulty: 'INTERMEDIATE' },
+      { id: 11, name: 'Lateral Raise', description: 'Dang tạ đơn sang 2 bên phát triển vai giữa', muscleGroup: 'SHOULDERS', equipment: 'Dumbbell', difficulty: 'BEGINNER' },
+      { id: 13, name: 'Barbell Row', description: 'Cúi người kéo tạ đòn vào bụng', muscleGroup: 'BACK', equipment: 'Barbell', difficulty: 'INTERMEDIATE' },
+      { id: 14, name: 'Lat Pulldown', description: 'Kéo xô máy xuống ngực trên', muscleGroup: 'BACK', equipment: 'Cable', difficulty: 'BEGINNER' },
     ];
   }
 }
@@ -190,7 +197,7 @@ export async function getExercises(muscleGroup?: string): Promise<Exercise[]> {
 export async function getWorkoutPlans(customerId = 1): Promise<WorkoutPlan[]> {
   try {
     const res = await fetch(`${API_BASE}/workout-plans?customerId=${customerId}`);
-    if (!res.ok) throw new Error('Failed to fetch plans');
+    if (!res.ok) throw new Error('Failed to fetch workout plans');
     const data = await res.json();
     return Array.isArray(data) ? data : data.content || [];
   } catch (err) {
@@ -198,25 +205,58 @@ export async function getWorkoutPlans(customerId = 1): Promise<WorkoutPlan[]> {
     return [
       {
         id: 1,
-        customerId: 1,
-        name: 'Giáo án Tăng Cơ 4 Buổi (Upper/Lower Split)',
+        name: 'Giáo án Tăng Cơ 4 Ngày (Upper / Lower)',
+        description: 'Tập trung phì đại cơ bắp, cân bằng thân trên và thân dưới',
         goal: 'MUSCLE_GAIN',
         difficulty: 'INTERMEDIATE',
         targetDaysPerWeek: 4,
-        description: 'Tập trung kích thích phì đại cơ bắp, cân bằng kéo đẩy.',
+        status: 'ACTIVE',
         exercises: [
-          { exerciseId: 1, exerciseName: 'Barbell Bench Press', dayOfWeek: 1, sets: 4, reps: 8, targetRpe: 8, restSeconds: 90 },
-          { exerciseId: 2, exerciseName: 'Incline Dumbbell Press', dayOfWeek: 1, sets: 3, reps: 10, targetRpe: 8, restSeconds: 75 },
-          { exerciseId: 3, exerciseName: 'Barbell Back Squat', dayOfWeek: 2, sets: 4, reps: 6, targetRpe: 8, restSeconds: 120 }
+          { exerciseId: 1, exerciseName: 'Barbell Bench Press', muscleGroup: 'CHEST', dayOfWeek: 1, sets: 4, reps: 8, restSecs: 90, targetRpe: 8 },
+          { exerciseId: 10, exerciseName: 'Overhead Press (OHP)', muscleGroup: 'SHOULDERS', dayOfWeek: 1, sets: 3, reps: 10, restSecs: 60, targetRpe: 8 },
+          { exerciseId: 13, exerciseName: 'Barbell Row', muscleGroup: 'BACK', dayOfWeek: 1, sets: 4, reps: 10, restSecs: 90, targetRpe: 8 },
+          { exerciseId: 7, exerciseName: 'Barbell Back Squat', muscleGroup: 'LEGS', dayOfWeek: 2, sets: 4, reps: 6, restSecs: 120, targetRpe: 8 },
+          { exerciseId: 9, exerciseName: 'Romanian Deadlift', muscleGroup: 'LEGS', dayOfWeek: 2, sets: 3, reps: 8, restSecs: 90, targetRpe: 7 },
+        ]
+      },
+      {
+        id: 2,
+        name: 'Giảm Mỡ Đốt Calo Toàn Diện (Full Body HIIT)',
+        description: 'Cường độ cao ngắt quãng kết hợp tạ nhẹ giúp siết cơ',
+        goal: 'FAT_LOSS',
+        difficulty: 'BEGINNER',
+        targetDaysPerWeek: 3,
+        status: 'ACTIVE',
+        exercises: [
+          { exerciseId: 8, exerciseName: 'Leg Press', muscleGroup: 'LEGS', dayOfWeek: 1, sets: 3, reps: 15, restSecs: 45, targetRpe: 7 },
+          { exerciseId: 14, exerciseName: 'Lat Pulldown', muscleGroup: 'BACK', dayOfWeek: 1, sets: 3, reps: 12, restSecs: 45, targetRpe: 7 },
+          { exerciseId: 3, exerciseName: 'Cable Crossover', muscleGroup: 'CHEST', dayOfWeek: 1, sets: 3, reps: 15, restSecs: 45, targetRpe: 7 },
         ]
       }
     ];
   }
 }
 
-export async function createWorkoutPlan(plan: Partial<WorkoutPlan>): Promise<WorkoutPlan> {
-  const res = await api.post('/workout-plans', plan);
-  return res.data;
+export async function getWorkoutPlanById(id: number): Promise<WorkoutPlan | null> {
+  try {
+    const res = await fetch(`${API_BASE}/workout-plans/${id}`);
+    if (!res.ok) throw new Error('Failed to fetch plan detail');
+    return await res.json();
+  } catch (err) {
+    console.warn('API getWorkoutPlanById fallback:', err);
+    const plans = await getWorkoutPlans();
+    return plans.find(p => p.id === id) || plans[0] || null;
+  }
+}
+
+export async function createWorkoutPlan(plan: WorkoutPlan): Promise<WorkoutPlan> {
+  const res = await fetch(`${API_BASE}/workout-plans`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(plan),
+  });
+  if (!res.ok) throw new Error('Failed to create plan');
+  return await res.json();
 }
 
 export async function getProgressSummary(customerId = 1): Promise<ProgressSummary> {
@@ -230,25 +270,26 @@ export async function getProgressSummary(customerId = 1): Promise<ProgressSummar
       customerId,
       streak: 12,
       totalSessionsCompleted: 48,
-      sessionsThisMonth: 9,
+      sessionsThisMonth: 14,
       personalRecords: [
         { exerciseId: 1, exerciseName: 'Barbell Bench Press', maxWeightKg: 85, maxReps: 5 },
-        { exerciseId: 3, exerciseName: 'Barbell Back Squat', maxWeightKg: 110, maxReps: 4 },
-        { exerciseId: 4, exerciseName: 'Conventional Deadlift', maxWeightKg: 135, maxReps: 3 },
-      ]
+        { exerciseId: 7, exerciseName: 'Barbell Back Squat', maxWeightKg: 120, maxReps: 4 },
+        { exerciseId: 9, exerciseName: 'Romanian Deadlift', maxWeightKg: 140, maxReps: 5 },
+        { exerciseId: 10, exerciseName: 'Overhead Press (OHP)', maxWeightKg: 55, maxReps: 6 },
+      ],
     };
   }
 }
 
-export async function getWorkoutSessions(customerId = 1): Promise<WorkoutSession[]> {
+export async function getRecentWorkoutSessions(customerId = 1): Promise<WorkoutSession[]> {
   try {
-    const res = await fetch(`${API_BASE}/workout-sessions?customerId=${customerId}`);
-    if (!res.ok) throw new Error('Failed to fetch sessions');
-    return await res.json();
+    const res = await fetch(`${API_BASE}/workout-sessions?customerId=${customerId}&size=5`);
+    if (!res.ok) throw new Error('Failed to fetch recent sessions');
+    const data = await res.json();
+    return Array.isArray(data) ? data : data.content || [];
   } catch (err) {
-    console.warn('API getWorkoutSessions fallback:', err);
     return [
-      { id: 1, customerId, startedAt: '2026-10-28T09:00:00', completedAt: '2026-10-28T10:15:00', status: 'COMPLETED', totalDurationSecs: 4500, caloriesBurned: 420, notes: 'Tập ngực & tay sau rất sung' },
+      { id: 1, customerId, startedAt: '2026-10-28T09:00:00', completedAt: '2026-10-28T10:15:00', status: 'COMPLETED', totalDurationSecs: 4500, caloriesBurned: 420, notes: 'Đẩy ngực sung sức, đạt PR' },
       { id: 2, customerId, startedAt: '2026-10-26T17:30:00', completedAt: '2026-10-26T18:35:00', status: 'COMPLETED', totalDurationSecs: 3900, caloriesBurned: 510, notes: 'Squat tăng thêm 5kg' },
       { id: 3, customerId, startedAt: '2026-10-24T08:00:00', completedAt: '2026-10-24T09:00:00', status: 'COMPLETED', totalDurationSecs: 3600, caloriesBurned: 380, notes: 'Kéo xô lưng hoàn thành tốt' },
     ];
