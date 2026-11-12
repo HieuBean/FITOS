@@ -28,7 +28,7 @@ Có thể đặt thêm `FITOS_TEST_DATABASE_USER` và `FITOS_TEST_DATABASE_PASSW
 
 | Service | Port | Thư mục | Endpoint chính |
 |---|---|---|---|
-| ai-crm | 8001 | `ai/` | `/crm/score` (lead scoring, gọi từ `LeadAIClient`) |
+| ai-crm | 8001 | `ai-crm/` | `/crm/score` (lead scoring, gọi từ `LeadAIClient`) |
 | ai-commerce | 8002 | `ai-commerce/` | `/predict-renewal`, `/renewal-action` |
 | **ai-operations** | **8003** | **`ai-operations/`** | `/health`, `/predict-noshow`, `/suggest-schedule`, `/trainer-tips` |
 | ai-workout | 8004 | `ai-workout/` | `/chat`, `/recommend`, `/safety-check` |

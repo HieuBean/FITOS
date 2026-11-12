@@ -15,7 +15,7 @@ public class LeadAIClient {
     private final RestClient restClient;
     private final String aiToken;
 
-    public LeadAIClient(@Value("${fitos.ai.crm-url:http://ai:8000}") String crmAiUrl,
+    public LeadAIClient(@Value("${fitos.ai.crm-url:http://localhost:8001}") String crmAiUrl,
                          @Value("${fitos.ai.token:fitos-ai-token}") String aiToken) {
         this.aiToken = aiToken;
         this.restClient = RestClient.builder()

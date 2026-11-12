@@ -67,10 +67,10 @@ jobs:
           python -m pip install -r requirements.txt pytest pytest-mock
           python -m pytest tests -q -p no:cacheprovider
       - name: Test CRM scoring service
-        working-directory: ai
+        working-directory: ai-crm
         run: |
           python -m pip install -r requirements.txt
-          python -m pytest test_main.py -q -p no:cacheprovider
+          python -m pytest tests -q -p no:cacheprovider
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -99,7 +99,7 @@ jobs:
             context: ./ai-workout
             image: fitos-ai-workout
           - name: ai-crm
-            context: ./ai
+            context: ./ai-crm
             image: fitos-ai-crm
           - name: frontend
             context: ./frontend
