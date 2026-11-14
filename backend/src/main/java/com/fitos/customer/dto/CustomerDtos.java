@@ -1,14 +1,17 @@
 package com.fitos.customer.dto;
 
-import com.fitos.customer.Customer;
-import com.fitos.membership.Membership;
-import com.fitos.membership.PtPackage;
-import com.fitos.order.dto.OrderDtos.OrderResponse;
+import com.fitos.model.Customer;
+import com.fitos.model.Membership;
+import com.fitos.model.PtPackage;
+import com.fitos.model.Order;
+import com.fitos.model.Payment;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 public final class CustomerDtos {
@@ -18,7 +21,7 @@ public final class CustomerDtos {
 
     // ------------------------------------------------------------ list (#30)
 
-    public record MembershipBrief(Long id, Long planId, String planName, Membership.Status status,
+    public record MembershipBrief(Long id, Long planId, String planName, String status,
                                   LocalDate startDate, LocalDate endDate, long daysRemaining) {
         public static MembershipBrief from(Membership m, String planName, LocalDate today) {
             return new MembershipBrief(m.getId(), m.getPlanId(), planName, m.getStatus(), m.getStartDate(),
@@ -36,18 +39,49 @@ public final class CustomerDtos {
                                   LocalDate dateOfBirth, String gender, String fitnessGoal, String notes,
                                   OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         public static CustomerProfile from(Customer c) {
+            OffsetDateTime cat = c.getCreatedAt() != null ? c.getCreatedAt().atOffset(ZoneOffset.UTC) : null;
+            OffsetDateTime uat = c.getUpdatedAt() != null ? c.getUpdatedAt().atOffset(ZoneOffset.UTC) : null;
             return new CustomerProfile(c.getId(), c.getUserId(), c.getLeadId(), c.getFullName(), c.getEmail(),
                     c.getPhone(), c.getDateOfBirth(), c.getGender(), c.getFitnessGoal(), c.getNotes(),
-                    c.getCreatedAt(), c.getUpdatedAt());
+                    cat, uat);
         }
     }
 
-    public record PtPackageBrief(Long id, Long planId, String planName, PtPackage.Status status,
+    public record PtPackageBrief(Long id, Long planId, String planName, String status,
                                  int totalSessions, int remainingSessions, LocalDate startDate,
                                  LocalDate expiryDate) {
         public static PtPackageBrief from(PtPackage p, String planName) {
-            return new PtPackageBrief(p.getId(), p.getPlanId(), planName, p.getStatus(), p.getTotalSessions(),
-                    p.getRemainingSessions(), p.getStartDate(), p.getExpiryDate());
+            return new PtPackageBrief(p.getId(), p.getPlanId(), planName, p.getStatus(),
+                    p.getTotalSessions() == null ? 0 : p.getTotalSessions(),
+                    p.getRemainingSessions() == null ? 0 : p.getRemainingSessions(),
+                    null, p.getExpiresAt());
+        }
+    }
+
+    public record PaymentSummary(Long id, String transactionRef, BigDecimal amount, String paymentMethod,
+                                 String status, Instant paidAt, String failureReason) {
+        public static PaymentSummary from(Payment p) {
+            return new PaymentSummary(p.getId(), p.getTransactionRef(), p.getAmount(),
+                    p.getPaymentMethod(), p.getStatus(), p.getPaidAt(), null);
+        }
+    }
+
+    public record OrderResponse(
+            Long id,
+            String orderReference,
+            Long customerId,
+            String customerName,
+            String customerEmail,
+            String status,
+            BigDecimal totalAmount,
+            Instant createdAt,
+            List<PaymentSummary> payments
+    ) {
+        public static OrderResponse from(Order o, String customerName, String customerEmail,
+                                         List<PaymentSummary> payments) {
+            return new OrderResponse(o.getId(), o.getOrderReference(), o.getCustomerId(),
+                    customerName, customerEmail, o.getStatus(), o.getTotalAmount(),
+                    o.getCreatedAt(), payments);
         }
     }
 

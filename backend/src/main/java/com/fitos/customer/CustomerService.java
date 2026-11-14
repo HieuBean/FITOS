@@ -1,20 +1,19 @@
 package com.fitos.customer;
 
-import com.fitos.common.dto.PageResponse;
+import com.fitos.dto.common.PageResponse;
 import com.fitos.customer.dto.CustomerDtos.*;
-import com.fitos.membership.Membership;
-import com.fitos.membership.MembershipRepository;
-import com.fitos.membership.PtPackage;
-import com.fitos.membership.PtPackageRepository;
-import com.fitos.order.Order;
-import com.fitos.order.OrderRepository;
-import com.fitos.order.OrderStatus;
-import com.fitos.order.dto.OrderDtos.OrderResponse;
-import com.fitos.order.dto.OrderDtos.PaymentSummary;
-import com.fitos.payment.Payment;
-import com.fitos.payment.PaymentRepository;
-import com.fitos.plan.ServicePlan;
-import com.fitos.plan.ServicePlanRepository;
+import com.fitos.model.Customer;
+import com.fitos.model.Membership;
+import com.fitos.model.PtPackage;
+import com.fitos.model.Order;
+import com.fitos.model.Payment;
+import com.fitos.model.ServicePlan;
+import com.fitos.repository.CustomerRepository;
+import com.fitos.repository.MembershipRepository;
+import com.fitos.repository.PtPackageRepository;
+import com.fitos.repository.OrderRepository;
+import com.fitos.repository.PaymentRepository;
+import com.fitos.repository.ServicePlanRepository;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,8 +67,9 @@ public class CustomerService {
 
         return PageResponse.of(result, c -> {
             Membership m = current.get(c.getId());
+            var cat = c.getCreatedAt() != null ? c.getCreatedAt().atOffset(ZoneOffset.UTC) : null;
             return new CustomerListItem(c.getId(), c.getFullName(), c.getEmail(), c.getPhone(), c.getFitnessGoal(),
-                    c.getCreatedAt(), m == null ? null : MembershipBrief.from(m, planNames.get(m.getPlanId()), today));
+                    cat, m == null ? null : MembershipBrief.from(m, planNames.get(m.getPlanId()), today));
         });
     }
 
@@ -95,16 +96,11 @@ public class CustomerService {
             sub.select(m.get("id"));
             if (FILTER_NO_MEMBERSHIP.equalsIgnoreCase(status)) {
                 sub.where(cb.equal(m.get("customerId"), root.get("id")),
-                        m.get("status").in(Membership.Status.ACTIVE, Membership.Status.PAUSED));
+                        m.get("status").in("ACTIVE", "PAUSED"));
                 return cb.not(cb.exists(sub));
             }
-            Membership.Status st;
-            try {
-                st = Membership.Status.valueOf(status.toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown membership status: " + status);
-            }
-            Predicate p = cb.and(cb.equal(m.get("customerId"), root.get("id")), cb.equal(m.get("status"), st));
+            Predicate p = cb.and(cb.equal(m.get("customerId"), root.get("id")),
+                    cb.equal(cb.upper(m.get("status")), status.trim().toUpperCase(Locale.ROOT)));
             sub.where(p);
             return cb.exists(sub);
         };
@@ -112,16 +108,12 @@ public class CustomerService {
 
     // ------------------------------------------------------------------ #31
 
-    /**
-     * Không bọc @Transactional: các truy vấn sang module khác có thể lỗi (bảng chưa tồn tại)
-     * và trong PostgreSQL một lỗi sẽ làm hỏng cả transaction đang mở.
-     */
     public CustomerDetailResponse getDetail(Long id) {
         Customer c = find(id);
         LocalDate today = LocalDate.now(clock);
 
         List<Membership> memberships = membershipRepository.findByCustomerIdOrderByEndDateDesc(id);
-        List<PtPackage> packages = ptPackageRepository.findByCustomerIdOrderByExpiryDateDesc(id);
+        List<PtPackage> packages = ptPackageRepository.findByCustomerIdOrderByExpiresAtDesc(id);
         List<Order> orders = orderRepository.findTop20ByCustomerIdOrderByCreatedAtDesc(id);
 
         Map<Long, String> planNames = planNames(Stream.concat(
@@ -143,9 +135,9 @@ public class CustomerService {
                         paymentsByOrder.getOrDefault(o.getId(), List.of())))
                 .toList();
 
-        BigDecimal totalSpent = orders.stream().filter(o -> o.getStatus() == OrderStatus.PAID)
+        BigDecimal totalSpent = orders.stream().filter(o -> "PAID".equalsIgnoreCase(o.getStatus()))
                 .map(Order::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-        long paidOrders = orders.stream().filter(o -> o.getStatus() == OrderStatus.PAID).count();
+        long paidOrders = orders.stream().filter(o -> "PAID".equalsIgnoreCase(o.getStatus())).count();
 
         CustomerStats stats = new CustomerStats(totalSpent, paidOrders,
                 activityQueries.countBookings(id),
@@ -193,11 +185,14 @@ public class CustomerService {
     /** Thẻ "hiện tại": ưu tiên ACTIVE → PAUSED → thẻ kết thúc gần nhất. */
     static Optional<Membership> pickCurrent(List<Membership> memberships) {
         Comparator<Membership> byPriority = Comparator
-                .comparingInt((Membership m) -> switch (m.getStatus()) {
-                    case ACTIVE -> 0;
-                    case PAUSED -> 1;
-                    case EXPIRED -> 2;
-                    case CANCELLED -> 3;
+                .comparingInt((Membership m) -> {
+                    String st = m.getStatus() == null ? "" : m.getStatus().toUpperCase(Locale.ROOT);
+                    return switch (st) {
+                        case "ACTIVE" -> 0;
+                        case "PAUSED" -> 1;
+                        case "EXPIRED" -> 2;
+                        default -> 3;
+                    };
                 })
                 .thenComparing(Membership::getEndDate, Comparator.reverseOrder());
         return memberships.stream().min(byPriority);

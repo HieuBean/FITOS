@@ -1,6 +1,6 @@
 package com.fitos.customer;
 
-import com.fitos.common.dto.PageResponse;
+import com.fitos.dto.common.PageResponse;
 import com.fitos.common.security.Roles;
 import com.fitos.customer.dto.CustomerDtos.CustomerDetailResponse;
 import com.fitos.customer.dto.CustomerDtos.CustomerListItem;
