@@ -35,6 +35,14 @@ public class ServiceActivationService {
     public void activate(Order order) {
         LocalDate today = LocalDate.now();
         for (OrderItem item : orderItemRepository.findByOrderId(order.getId())) {
+            // Đơn bán lẻ/POS có thể chứa dòng sản phẩm hoặc suất lớp — những dòng này
+            // KHÔNG sinh quyền lợi gói tập (kho đã trừ ngay khi tạo đơn, booking đã
+            // được xác nhận riêng). Bỏ qua để tránh findById(null) làm sập giao dịch.
+            String itemType = item.getItemType() == null ? "PLAN" : item.getItemType();
+            if (!"PLAN".equals(itemType) || item.getPlanId() == null) {
+                log.debug("Activation bỏ qua hạng mục {} loại {}", item.getId(), itemType);
+                continue;
+            }
             ServicePlan plan = planRepository.findById(item.getPlanId()).orElse(null);
             if (plan == null) {
                 log.warn("Activation bỏ qua hạng mục {}: không tìm thấy gói {}", item.getId(), item.getPlanId());
