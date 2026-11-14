@@ -83,8 +83,16 @@ public class OrderService {
                     .build());
         }
 
-        BigDecimal discountRate = resolveDiscountRate(req.discountCode());
-        BigDecimal discount = subtotal.multiply(discountRate).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal discount;
+        if (req.discountAmount() != null && req.discountAmount().compareTo(BigDecimal.ZERO) >= 0) {
+            discount = req.discountAmount().setScale(2, RoundingMode.HALF_UP);
+            if (discount.compareTo(subtotal) > 0) {
+                discount = subtotal;
+            }
+        } else {
+            BigDecimal discountRate = resolveDiscountRate(req.discountCode());
+            discount = subtotal.multiply(discountRate).setScale(2, RoundingMode.HALF_UP);
+        }
         BigDecimal tax = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.subtract(discount).add(tax).setScale(2, RoundingMode.HALF_UP);
 
@@ -156,6 +164,12 @@ public class OrderService {
     /** Dùng nội bộ bởi PaymentService khi thanh toán thành công. */
     @Transactional
     public void markPaid(Order order) {
+        // Phải ghi cả thời điểm thanh toán: trước đây chỉ đổi status nên
+        // orders.paid_at luôn NULL, khiến hoá đơn in sai ngày và báo cáo
+        // doanh thu theo ngày thanh toán không lọc được đơn.
+        if (order.getPaidAt() == null) {
+            order.setPaidAt(java.time.Instant.now());
+        }
         order.setStatus("PAID");
         orderRepository.save(order);
     }
@@ -193,13 +207,22 @@ public class OrderService {
 
     private OrderResponse toResponse(Order order, String customerName, List<OrderItem> items) {
         List<OrderItemResponse> itemResponses = items.stream()
-                .map(item -> new OrderItemResponse(
-                        item.getId(),
-                        item.getPlanId(),
-                        planRepository.findById(item.getPlanId()).map(ServicePlan::getName).orElse(null),
-                        item.getQuantity(),
-                        item.getUnitPrice(),
-                        item.getTotalPrice()))
+                .map(item -> {
+                    // Đơn bán lẻ có dòng sản phẩm/suất lớp với plan_id = null.
+                    // Không được gọi findById(null) — sẽ ném "The given id must not be null".
+                    String itemName = item.getItemName();
+                    if (itemName == null && item.getPlanId() != null) {
+                        itemName = planRepository.findById(item.getPlanId())
+                                .map(ServicePlan::getName).orElse(null);
+                    }
+                    return new OrderItemResponse(
+                            item.getId(),
+                            item.getPlanId(),
+                            itemName,
+                            item.getQuantity(),
+                            item.getUnitPrice(),
+                            item.getTotalPrice());
+                })
                 .toList();
         return new OrderResponse(order.getId(), order.getCustomerId(), customerName, order.getOrderReference(),
                 order.getStatus(), order.getSubtotalAmount(), order.getDiscountAmount(), order.getTaxAmount(),
