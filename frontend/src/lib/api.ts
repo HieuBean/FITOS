@@ -170,12 +170,12 @@ export interface WorkoutLogPayload {
 
 export async function getExercises(muscleGroup?: string): Promise<Exercise[]> {
   try {
-    const url = muscleGroup && muscleGroup !== 'ALL'
-      ? `${API_BASE}/exercises?muscleGroup=${encodeURIComponent(muscleGroup)}&size=50`
-      : `${API_BASE}/exercises?size=50`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to fetch exercises');
-    const data = await res.json();
+    // Dùng axios instance để có JWT: /api/exercises yêu cầu đăng nhập,
+    // còn fetch trần trước đây luôn nhận 401 và rơi vào dữ liệu giả.
+    const params: Record<string, string | number> = { size: 50 };
+    if (muscleGroup && muscleGroup !== 'ALL') params.muscleGroup = muscleGroup;
+    const res = await api.get('/exercises', { params });
+    const data = res.data;
     return Array.isArray(data) ? data : data.content || [];
   } catch (err) {
     console.warn('API getExercises fallback:', err);
@@ -259,40 +259,58 @@ export async function createWorkoutPlan(plan: WorkoutPlan): Promise<WorkoutPlan>
   return await res.json();
 }
 
+/**
+ * Tiến độ của hội viên đang đăng nhập.
+ *
+ * Endpoint đúng là `GET /api/progress/me` (không cần customerId — server lấy từ JWT).
+ * Trước đây hàm gọi `/progress/summary?customerId=1`, endpoint không tồn tại, nên
+ * luôn 404 và trang Tiến độ hiển thị số liệu bịa (streak 12, PR 85/120/140kg).
+ *
+ * Hàm KHÔNG ném lỗi khi tài khoản không có hồ sơ hội viên (403/404) — trả về số 0
+ * để trang không bị lỗi runtime, và để nơi gọi tự quyết định cách hiển thị.
+ */
 export async function getProgressSummary(customerId = 1): Promise<ProgressSummary> {
+  const empty: ProgressSummary = {
+    customerId,
+    streak: 0,
+    totalSessionsCompleted: 0,
+    sessionsThisMonth: 0,
+    personalRecords: [],
+  };
   try {
-    const res = await fetch(`${API_BASE}/progress/summary?customerId=${customerId}`);
-    if (!res.ok) throw new Error('Failed to fetch progress');
-    return await res.json();
-  } catch (err) {
-    console.warn('API getProgressSummary fallback:', err);
+    const res = await api.get('/progress/me');
+    const p = res.data || {};
     return {
       customerId,
-      streak: 12,
-      totalSessionsCompleted: 48,
-      sessionsThisMonth: 14,
-      personalRecords: [
-        { exerciseId: 1, exerciseName: 'Barbell Bench Press', maxWeightKg: 85, maxReps: 5 },
-        { exerciseId: 7, exerciseName: 'Barbell Back Squat', maxWeightKg: 120, maxReps: 4 },
-        { exerciseId: 9, exerciseName: 'Romanian Deadlift', maxWeightKg: 140, maxReps: 5 },
-        { exerciseId: 10, exerciseName: 'Overhead Press (OHP)', maxWeightKg: 55, maxReps: 6 },
-      ],
+      streak: p.currentStreakDays ?? 0,
+      totalSessionsCompleted: p.totalSessionsCompleted ?? p.workoutsThisMonth ?? 0,
+      sessionsThisMonth: p.workoutsThisMonth ?? 0,
+      personalRecords: Array.isArray(p.personalRecords)
+        ? p.personalRecords.map((r: any) => ({
+            exerciseId: r.exerciseId,
+            exerciseName: r.exerciseName,
+            maxWeightKg: Number(r.maxWeightKg) || 0,
+            maxReps: Number(r.maxReps) || 0,
+          }))
+        : [],
     };
+  } catch (err: any) {
+    const status = err?.response?.status;
+    if (status !== 403 && status !== 404) {
+      console.warn('API getProgressSummary failed:', err?.message ?? err);
+    }
+    return empty;
   }
 }
 
 export async function getRecentWorkoutSessions(customerId = 1): Promise<WorkoutSession[]> {
   try {
-    const res = await fetch(`${API_BASE}/workout-sessions?customerId=${customerId}&size=5`);
-    if (!res.ok) throw new Error('Failed to fetch recent sessions');
-    const data = await res.json();
+    const res = await api.get('/workout-sessions/me');
+    const data = res.data;
     return Array.isArray(data) ? data : data.content || [];
   } catch (err) {
-    return [
-      { id: 1, customerId, startedAt: '2026-10-28T09:00:00', completedAt: '2026-10-28T10:15:00', status: 'COMPLETED', totalDurationSecs: 4500, caloriesBurned: 420, notes: 'Đẩy ngực sung sức, đạt PR' },
-      { id: 2, customerId, startedAt: '2026-10-26T17:30:00', completedAt: '2026-10-26T18:35:00', status: 'COMPLETED', totalDurationSecs: 3900, caloriesBurned: 510, notes: 'Squat tăng thêm 5kg' },
-      { id: 3, customerId, startedAt: '2026-10-24T08:00:00', completedAt: '2026-10-24T09:00:00', status: 'COMPLETED', totalDurationSecs: 3600, caloriesBurned: 380, notes: 'Kéo xô lưng hoàn thành tốt' },
-    ];
+    console.warn('API getRecentWorkoutSessions failed:', err);
+    return [];
   }
 }
 

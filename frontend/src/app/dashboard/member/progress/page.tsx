@@ -4,37 +4,47 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getProgressSummary, ProgressSummary } from '@/lib/api';
 
-const monthlyFrequencies = [
-  { month: 'Tháng 5', count: 14, target: 16 },
-  { month: 'Tháng 6', count: 18, target: 16 },
-  { month: 'Tháng 7', count: 16, target: 16 },
-  { month: 'Tháng 8', count: 12, target: 16 },
-  { month: 'Tháng 9', count: 19, target: 16 },
-  { month: 'Tháng 10', count: 21, target: 16 },
-];
+// Biểu đồ tần suất theo tháng: hiển thị khung tháng thật (6 tháng gần nhất) để
+// không còn là dãy số bịa cố định như trước. Số liệu lấy từ tổng buổi tập hiện có.
+function buildMonthlyFrequencies(totalSessions: number) {
+  const now = new Date();
+  const months: { month: string; count: number; target: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      month: `Tháng ${d.getMonth() + 1}`,
+      count: 0,
+      target: 16,
+    });
+  }
+  // Dồn tổng số buổi đã hoàn thành vào tháng hiện tại (dữ liệu API chỉ trả tổng
+  // và số buổi tháng này, nên không bịa phân bố theo từng tháng).
+  if (months.length && totalSessions > 0) {
+    months[months.length - 1].count = totalSessions;
+  }
+  return months;
+}
 
 export default function ProgressPage() {
   const [progress, setProgress] = useState<ProgressSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getProgressSummary(1).then((data) => {
-      setProgress(data);
-      setLoading(false);
-    });
+    getProgressSummary(1)
+      .then((data) => setProgress(data))
+      .catch(() => setProgress(null))
+      .finally(() => setLoading(false));
   }, []);
 
-  const streak = progress?.streak ?? 12;
-  const totalSessions = progress?.totalSessionsCompleted ?? 48;
-  const thisMonth = progress?.sessionsThisMonth ?? 9;
-  const prs = progress?.personalRecords ?? [
-    { exerciseId: 1, exerciseName: 'Bench Press', maxWeightKg: 85, maxReps: 5 },
-    { exerciseId: 7, exerciseName: 'Barbell Squat', maxWeightKg: 120, maxReps: 4 },
-    { exerciseId: 9, exerciseName: 'Romanian Deadlift', maxWeightKg: 140, maxReps: 5 },
-    { exerciseId: 10, exerciseName: 'Overhead Press', maxWeightKg: 55, maxReps: 6 },
-  ];
+  // Không còn giá trị mặc định bịa (12 / 48 / 9). Chưa có dữ liệu thì hiển thị 0.
+  const streak = progress?.streak ?? 0;
+  const totalSessions = progress?.totalSessionsCompleted ?? 0;
+  const thisMonth = progress?.sessionsThisMonth ?? 0;
+  const prs = progress?.personalRecords ?? [];
+  const monthlyFrequencies = buildMonthlyFrequencies(thisMonth);
 
-  const maxCount = Math.max(...monthlyFrequencies.map((m) => m.count), 24);
+  const maxCount = Math.max(...monthlyFrequencies.map((m) => m.count), 1);
+  const hasData = totalSessions > 0 || thisMonth > 0 || prs.length > 0;
 
   return (
     <div className="min-h-screen bg-[#F5F5F0]">
@@ -63,7 +73,7 @@ export default function ProgressPage() {
         {/* KPI Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1">
               Chuỗi đi tập liên tục
             </p>
             <div className="flex items-baseline gap-2">
@@ -74,7 +84,7 @@ export default function ProgressPage() {
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1">
               Tổng số buổi tập
             </p>
             <div className="flex items-baseline gap-2">
@@ -85,7 +95,7 @@ export default function ProgressPage() {
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1">
               Buổi tập trong tháng
             </p>
             <div className="flex items-baseline gap-2">
@@ -101,7 +111,7 @@ export default function ProgressPage() {
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1">
               Kỷ lục cá nhân (PRs)
             </p>
             <div className="flex items-baseline gap-2">
@@ -132,14 +142,14 @@ export default function ProgressPage() {
           </div>
 
           {/* Bar Chart Container */}
-          <div className="h-56 flex items-end gap-6 sm:gap-10 pt-6 px-4 border-b border-[#DADCD3]">
+          <div className="h-56 flex items-end gap-3 sm:gap-10 pt-6 px-2 sm:px-4 border-b border-[#DADCD3] overflow-hidden">
             {monthlyFrequencies.map((m, idx) => {
               const heightPercent = (m.count / maxCount) * 100;
               const isExceed = m.count >= m.target;
               return (
-                <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                <div key={idx} className="flex-1 min-w-0 flex flex-col items-center h-full justify-end group relative">
                   {/* Tooltip on Hover */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-[#111310] text-[#D7FF3F] text-[10px] font-bold py-1 px-2 rounded pointer-events-none whitespace-nowrap shadow-lg">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 z-10 bg-[#111310] text-[#D7FF3F] text-[10px] font-bold py-1 px-2 rounded pointer-events-none whitespace-nowrap shadow-lg">
                     {m.count} buổi ({isExceed ? 'Vượt chỉ tiêu' : 'Chưa đạt'})
                   </div>
 
@@ -156,7 +166,7 @@ export default function ProgressPage() {
                   />
 
                   {/* Month Label */}
-                  <span className="text-xs font-semibold text-[#5E625A] mt-3 whitespace-nowrap">
+                  <span className="text-[10px] sm:text-xs font-semibold text-[#5E625A] mt-3 truncate max-w-full">
                     {m.month}
                   </span>
                 </div>
@@ -170,7 +180,7 @@ export default function ProgressPage() {
           {/* PRs Table */}
           <div className="lg:col-span-7 bg-white border border-[#DADCD3] rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#6B6F66]">
                 Bảng Kỷ Lục Sức Mạnh Cá Nhân (PRs)
               </h2>
               <span className="text-xs font-bold text-[#526B00] bg-[#D7FF3F]/40 px-2.5 py-0.5 rounded-full">
@@ -179,8 +189,8 @@ export default function ProgressPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-[#FAF9F5] border-b border-[#DADCD3] text-xs font-semibold text-[#8A8E85] uppercase">
+              <table className="w-full min-w-[420px] text-left text-sm">
+                <thead className="bg-[#FAF9F5] border-b border-[#DADCD3] text-xs font-semibold text-[#6B6F66] uppercase">
                   <tr>
                     <th className="px-4 py-3">Bài tập</th>
                     <th className="px-4 py-3">Mức tạ cao nhất</th>
@@ -203,7 +213,7 @@ export default function ProgressPage() {
                       </td>
                       <td className="px-4 py-3.5 text-right">
                         <span className="text-xs font-bold bg-[#D7FF3F] text-[#111310] px-2.5 py-1 rounded-full">
-                          +5% Tiến bộ
+                          Kỷ lục
                         </span>
                       </td>
                     </tr>
@@ -226,24 +236,43 @@ export default function ProgressPage() {
               </div>
 
               <h3 className="text-lg font-bold text-white mb-3">
-                Tiến độ Hypertrophy đạt 112% kỳ vọng!
+                {hasData
+                  ? `${thisMonth} buổi tập trong tháng này`
+                  : 'Chưa có dữ liệu tập luyện'}
               </h3>
 
               <div className="space-y-3 text-xs text-gray-300 leading-relaxed">
-                <p>
-                  • <strong>Tần suất &amp; Phục hồi:</strong> Bạn duy trì chuỗi {streak} ngày đi tập liên tục rất ấn tượng. Khối lượng tạ bài Squat và Deadlift đang tăng đều đặn theo nguyên tắc Progressive Overload.
-                </p>
-                <p>
-                  • <strong>Điểm cần chú ý:</strong> Nhóm cơ ngực trên đang có dấu hiệu chững tạ ở mốc 85kg. Nên tăng thời gian nghỉ giữa các hiệp nặng lên 120s và thêm 1 bài Incline Dumbbell Press.
-                </p>
-                <p>
-                  • <strong>Gợi ý dinh dưỡng:</strong> Bổ sung 25g protein và 500ml nước điện giải ngay sau buổi tập để tối ưu hóa phục hồi cơ bắp.
-                </p>
+                {hasData ? (
+                  <>
+                    <p>
+                      • <strong>Tần suất &amp; Phục hồi:</strong> Bạn đang có chuỗi {streak} ngày đi tập
+                      liên tục, tổng cộng {totalSessions} buổi đã hoàn thành.
+                    </p>
+                    <p>
+                      • <strong>Kỷ lục cá nhân:</strong>{' '}
+                      {prs.length > 0
+                        ? prs.slice(0, 3).map((p) => `${p.exerciseName} ${p.maxWeightKg}kg`).join(' · ')
+                        : 'Chưa ghi nhận mức tạ nào. Hãy ghi nhật ký buổi tập để hệ thống tính kỷ lục.'}
+                    </p>
+                    <p>
+                      • <strong>Gợi ý dinh dưỡng:</strong> Bổ sung 25g protein và 500ml nước điện giải
+                      ngay sau buổi tập để tối ưu hóa phục hồi cơ bắp.
+                    </p>
+                  </>
+                ) : (
+                  <p>
+                    Chưa có buổi tập nào được ghi nhận. Hãy vào mục{' '}
+                    <strong>Ghi nhật ký tập</strong> để bắt đầu theo dõi tiến độ, hoặc hỏi AI Coach
+                    để được hướng dẫn.
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-              <span className="text-[11px] text-gray-400">Được cập nhật tự động từ log buổi tập</span>
+              <span className="text-[11px] text-gray-400">
+                {hasData ? 'Tính từ nhật ký tập đã ghi' : 'Chưa có dữ liệu'}
+              </span>
               <Link
                 href="/dashboard/member/ai-coach"
                 className="text-xs font-bold text-[#D7FF3F] hover:underline flex items-center gap-1"
