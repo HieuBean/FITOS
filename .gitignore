@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 .pnp
 .pnp.js
@@ -54,3 +54,6 @@ playwright-report/
 nul
 # Local tooling (Maven/Python scratch used for verification)
 .tools/
+
+# Harness scratch: local logs, screenshots and helper scripts (may contain tokens)
+.dsh/
