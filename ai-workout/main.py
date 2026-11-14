@@ -230,9 +230,12 @@ async def chat_with_coach(req: ChatRequest):
 def generate_hybrid_reply(message: str, profile: FitnessProfile, context: dict) -> str:
     """Bộ tạo phản hồi thể hình thông minh cục bộ khi không có OpenAI key."""
     msg_lower = message.lower()
-    name = context.get("full_name", "bạn")
-    goal = context.get("fitness_goal", "thể lực")
-    injuries = context.get("injuries", [])
+    name = context.get("full_name") or "bạn"
+    # .get(key, default) không dùng default khi key TỒN TẠI với giá trị None,
+    # nên trước đây câu trả lời hiện "hành trình None" với tài khoản không có
+    # hồ sơ thể lực. Dùng toán tử `or` để luôn có chuỗi hiển thị được.
+    goal = context.get("fitness_goal") or "thể lực tổng quát"
+    injuries = context.get("injuries") or []
 
     # Nếu có chấn thương lưng
     if any("lưng" in inj.lower() for inj in injuries):
@@ -286,7 +289,7 @@ def generate_hybrid_reply(message: str, profile: FitnessProfile, context: dict) 
         )
 
     if any(k in msg_lower for k in ["mệt", "đau", "nghỉ", "recovery"]):
-        fatigue = context.get("fatigue_level", 3)
+        fatigue = context.get("fatigue_level") or 3
         return (
             f"Chào {name}! Hiện tại mức độ mệt mỏi của bạn đang ở mức {fatigue}/10. "
             "Nếu bạn cảm thấy cơ bắp ê ẩm hoặc thiếu ngủ, một buổi **Active Recovery (Phục hồi tích cực)** "
@@ -343,7 +346,7 @@ async def recommend_workout_adjustments(req: WorkoutRecommendationRequest):
             return result
         except Exception as exc:
             logger.warning("Structured recommendation unavailable: %s", exc)
-    injuries = context.get("injuries", [])
+    injuries = context.get("injuries") or []
     pain_note = req.feedback_or_pain_note or ""
 
     if not req.current_exercises:
