@@ -1,7 +1,7 @@
 package com.fitos.order;
 
-import com.fitos.plan.PlanType;
-import com.fitos.plan.ServicePlan;
+import com.fitos.model.ServicePlan;
+import com.fitos.model.ServicePlan.PlanType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,8 +15,7 @@ import java.util.Set;
  * <ul>
  *   <li>Giá lấy từ ServicePlan (server-side), không bao giờ từ client.</li>
  *   <li>Giảm giá ≥ 0 và ≤ subtotal → tổng không bao giờ âm.</li>
- *   <li>Mỗi đơn tối đa 1 gói MEMBERSHIP + 1 gói PT_PACKAGE (khớp unique index
- *       uq_memberships_order / uq_pt_packages_order trong V2_4).</li>
+ *   <li>Mỗi đơn tối đa 1 gói MEMBERSHIP + 1 gói PT_PACKAGE.</li>
  * </ul>
  */
 public final class OrderPricing {
@@ -44,27 +43,29 @@ public final class OrderPricing {
             if (line.quantity() != 1) {
                 throw new IllegalArgumentException("Quantity must be 1 for plan " + plan.getName());
             }
-            if (!seenTypes.add(plan.getPlanType())) {
-                throw new IllegalArgumentException("An order can contain at most one " + plan.getPlanType() + " plan");
+            PlanType type = plan.getPlanTypeEnum();
+            if (!seenTypes.add(type)) {
+                throw new IllegalArgumentException("An order can contain at most one " + type + " plan");
             }
             if (plan.getPrice() == null || plan.getPrice().signum() < 0) {
-                throw new IllegalArgumentException("Invalid price for plan " + plan.getName());
+                throw new IllegalArgumentException("Plan price must be non-negative: " + plan.getName());
             }
-            subtotal = subtotal.add(plan.getPrice().multiply(BigDecimal.valueOf(line.quantity())));
+            subtotal = subtotal.add(plan.getPrice().setScale(2, RoundingMode.HALF_UP));
         }
-        subtotal = scale(subtotal);
 
-        BigDecimal discount = scale(discountAmount == null ? BigDecimal.ZERO : discountAmount);
+        // scale 2 kể cả khi null để kết quả luôn có dạng 0.00 (nhất quán với cột NUMERIC(x,2)).
+        BigDecimal discount = discountAmount == null
+                ? BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
+                : discountAmount.setScale(2, RoundingMode.HALF_UP);
         if (discount.signum() < 0) {
-            throw new IllegalArgumentException("Discount must not be negative");
+            throw new IllegalArgumentException("Discount must not be negative: " + discount.toPlainString());
         }
         if (discount.compareTo(subtotal) > 0) {
-            throw new IllegalArgumentException("Discount (" + discount + ") exceeds subtotal (" + subtotal + ")");
+            throw new IllegalArgumentException(
+                    "Discount amount (" + discount.toPlainString() + ") exceeds subtotal (" + subtotal.toPlainString() + ")");
         }
-        return new Result(subtotal, discount, subtotal.subtract(discount));
-    }
 
-    private static BigDecimal scale(BigDecimal v) {
-        return v.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = subtotal.subtract(discount).setScale(2, RoundingMode.HALF_UP);
+        return new Result(subtotal, discount, total);
     }
 }
