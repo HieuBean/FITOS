@@ -41,14 +41,34 @@ export default function MemberHomePage() {
     setIsLoading(true);
     try {
       setError(null);
-      const [progressRes, metricsRes, activityRes] = await Promise.all([
+      // Dùng allSettled: một endpoint lỗi không được xoá sạch dữ liệu của các
+      // endpoint còn lại (trước đây Promise.all làm mất toàn bộ dashboard).
+      const [progressRes, metricsRes, activityRes] = await Promise.allSettled([
         api.get('/progress/me'),
         api.get('/body-metrics/me'),
         api.get('/member/activity'),
       ]);
-      setActivities(Array.isArray(activityRes.data) ? activityRes.data : []);
-      const progress = progressRes.data;
-      const latestMetric = Array.isArray(metricsRes.data) ? metricsRes.data[0] : null;
+
+      const progress = progressRes.status === 'fulfilled' ? progressRes.value.data : null;
+      const metrics = metricsRes.status === 'fulfilled' ? metricsRes.value.data : null;
+      const activitiesData = activityRes.status === 'fulfilled' ? activityRes.value.data : [];
+
+      if (!progress) {
+        // Tài khoản không có hồ sơ hội viên (vd. quản trị viên, lễ tân) — đây không
+        // phải sự cố hệ thống, nên báo rõ thay vì "Không thể tải tiến độ".
+        const status = (progressRes as PromiseRejectedResult).reason?.response?.status;
+        setData(null);
+        setActivities([]);
+        setError(
+          status === 403 || status === 404
+            ? 'Tài khoản này không có hồ sơ hội viên nên chưa có dữ liệu luyện tập. Trang này dành cho hội viên.'
+            : 'Không thể tải tiến độ tập luyện. Vui lòng thử lại.',
+        );
+        return;
+      }
+
+      setActivities(Array.isArray(activitiesData) ? activitiesData : []);
+      const latestMetric = Array.isArray(metrics) ? metrics[0] : null;
       setData({
         customerName: user?.fullName,
         currentStreakDays: progress.currentStreakDays ?? 0,
@@ -109,16 +129,16 @@ export default function MemberHomePage() {
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white border border-[#DADCD3] rounded-2xl p-6">
-            <p className="text-xs font-bold uppercase text-[#8A8E85]">Buổi tập tháng này</p>
+            <p className="text-xs font-bold uppercase text-[#6B6F66]">Buổi tập tháng này</p>
             <p className="text-3xl font-black mt-2">{data?.workoutsThisMonth ?? 0}</p>
           </div>
           <div className="bg-white border border-[#DADCD3] rounded-2xl p-6">
-            <p className="text-xs font-bold uppercase text-[#8A8E85]">Chuỗi ngày tập hiện tại</p>
+            <p className="text-xs font-bold uppercase text-[#6B6F66]">Chuỗi ngày tập hiện tại</p>
             <p className="text-3xl font-black mt-2">{data?.currentStreakDays ?? 0} ngày</p>
           </div>
           <div className="bg-white border border-[#DADCD3] rounded-2xl p-6">
             <div className="flex justify-between gap-2">
-              <p className="text-xs font-bold uppercase text-[#8A8E85]">Cân nặng gần nhất</p>
+              <p className="text-xs font-bold uppercase text-[#6B6F66]">Cân nặng gần nhất</p>
               <button onClick={() => setShowMetricModal(true)} className="text-xs font-bold text-[#526B00]">+ Ghi chỉ số</button>
             </div>
             <p className="text-3xl font-black mt-2">{data?.currentWeightKg != null ? `${data.currentWeightKg} kg` : 'Chưa có dữ liệu'}</p>
@@ -138,7 +158,7 @@ export default function MemberHomePage() {
                   </li>
                 ))}
               </ul>
-            ) : <p className="text-sm text-[#8A8E85] mt-4">Chưa có nhật ký tập để tính kỷ lục.</p>}
+            ) : <p className="text-sm text-[#6B6F66] mt-4">Chưa có nhật ký tập để tính kỷ lục.</p>}
           </div>
           <div className="bg-white border border-[#DADCD3] rounded-2xl p-6">
             <h2 className="text-base font-bold text-[#111310]">Thao tác nhanh</h2>
@@ -165,7 +185,7 @@ export default function MemberHomePage() {
               ))}
             </ul>
           ) : !isLoading && !error ? (
-            <p className="text-sm text-[#8A8E85] mt-4">Chưa có hoạt động được ghi nhận.</p>
+            <p className="text-sm text-[#6B6F66] mt-4">Chưa có hoạt động được ghi nhận.</p>
           ) : null}
         </section>
       </div>
