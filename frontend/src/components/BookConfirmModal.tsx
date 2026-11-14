@@ -47,12 +47,12 @@ export default function BookConfirmModal({ session, onConfirm, onClose, noShowSl
             <h2 id="book-confirm-title" className="text-base font-bold text-[#111310]">
               Xác nhận đặt chỗ
             </h2>
-            <p className="text-xs text-[#8A8E85] mt-0.5">Kiểm tra lại thông tin trước khi đặt</p>
+            <p className="text-xs text-[#6B6F66] mt-0.5">Kiểm tra lại thông tin trước khi đặt</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-[#8A8E85] hover:text-[#111310] text-sm"
+            className="text-[#6B6F66] hover:text-[#111310] text-sm"
             aria-label="Đóng"
           >
             ✕
@@ -125,7 +125,7 @@ export default function BookConfirmModal({ session, onConfirm, onClose, noShowSl
 function Item({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">{label}</dt>
+      <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66]">{label}</dt>
       <dd className="text-sm font-semibold text-[#111310] mt-0.5">{value}</dd>
     </div>
   );

@@ -41,7 +41,7 @@ export default function ExerciseDetailDrawer({ exercise, isOpen, onClose }: Exer
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Video preview / player */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#8A8E85] mb-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#6B6F66] mb-2">
                 Video Hướng Dẫn Kỹ Thuật Động Tác
               </p>
               <div className="w-full aspect-video bg-[#111310] rounded-xl overflow-hidden border border-[#DADCD3] relative flex items-center justify-center">
@@ -65,18 +65,18 @@ export default function ExerciseDetailDrawer({ exercise, isOpen, onClose }: Exer
             {/* Badges / Specs */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-[#FAF9F5] border border-[#DADCD3] p-3 rounded-xl">
-                <span className="text-[10px] text-[#8A8E85] uppercase font-bold block">Thiết bị tập</span>
+                <span className="text-[10px] text-[#6B6F66] uppercase font-bold block">Thiết bị tập</span>
                 <span className="text-xs font-bold text-[#111310] mt-0.5 block">{exercise.equipment || 'Tạ đơn / Tạ đòn'}</span>
               </div>
               <div className="bg-[#FAF9F5] border border-[#DADCD3] p-3 rounded-xl">
-                <span className="text-[10px] text-[#8A8E85] uppercase font-bold block">Độ khó</span>
+                <span className="text-[10px] text-[#6B6F66] uppercase font-bold block">Độ khó</span>
                 <span className="text-xs font-bold text-[#526B00] mt-0.5 block">{exercise.difficulty}</span>
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#8A8E85] mb-1.5">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#6B6F66] mb-1.5">
                 Mô tả &amp; Định hướng cơ học
               </p>
               <p className="text-xs text-[#5E625A] leading-relaxed bg-[#FAF9F5] p-3.5 rounded-xl border border-[#DADCD3]">
@@ -86,7 +86,7 @@ export default function ExerciseDetailDrawer({ exercise, isOpen, onClose }: Exer
 
             {/* Checklist form cues */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#8A8E85] mb-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#6B6F66] mb-2">
                 Quy Tắc Chuẩn Form (Cues)
               </p>
               <div className="space-y-2 text-xs text-[#111310]">

@@ -71,7 +71,7 @@ export default function RenewalRiskWidget({ days = 7, showRangeSelector = true }
       <header className="flex items-center justify-between px-5 py-4 border-b border-[#DADCD3]">
         <div>
           <h2 className="text-sm font-bold text-[#111310]">Cảnh báo gia hạn</h2>
-          <p className="text-[11px] text-[#8A8E85] mt-0.5">
+          <p className="text-[11px] text-[#6B6F66] mt-0.5">
             Gói hết hạn trong {range} ngày tới — ưu tiên xử lý nguy cơ cao
           </p>
         </div>
@@ -104,7 +104,7 @@ export default function RenewalRiskWidget({ days = 7, showRangeSelector = true }
       ) : items.length === 0 ? (
         <div className="p-8 text-center">
           <p className="text-sm font-semibold text-[#111310]">Không có gói nào sắp hết hạn</p>
-          <p className="text-xs text-[#8A8E85] mt-1">Tất cả hội viên trong khoảng {range} ngày đều ổn.</p>
+          <p className="text-xs text-[#6B6F66] mt-1">Tất cả hội viên trong khoảng {range} ngày đều ổn.</p>
         </div>
       ) : (
         <ul className="divide-y divide-[#DADCD3]">
@@ -112,7 +112,7 @@ export default function RenewalRiskWidget({ days = 7, showRangeSelector = true }
             <li key={item.id} className="flex items-center gap-3 px-5 py-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[#111310] truncate">{item.customerName}</p>
-                <p className="text-[11px] text-[#8A8E85]">
+                <p className="text-[11px] text-[#6B6F66]">
                   {item.planName} · hết hạn {formatDate(item.endDate)}
                 </p>
               </div>

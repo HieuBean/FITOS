@@ -70,13 +70,18 @@ export default function NoShowBadge({
     setIsLoading(true);
     setFailed(false);
     try {
+      // Endpoint này chỉ dành cho nhân viên (ADMIN/MANAGER/RECEPTIONIST/TRAINER).
+      // Hội viên gọi sẽ nhận 403 — im lặng bỏ qua thay vì ghi log lỗi mỗi lần render.
       const { data } = await api.post<NoShowRisk>('/ai/noshow-risk', {
         sessionId,
         customerId: customerId ?? null,
       });
       setRisk(data);
-    } catch (err) {
-      console.warn('Không lấy được dự đoán no-show:', err);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status !== 403 && status !== 401) {
+        console.warn('Không lấy được dự đoán no-show:', err?.message ?? err);
+      }
       setRisk(null);
       setFailed(true);
     } finally {
@@ -123,7 +128,7 @@ export default function NoShowBadge({
   }
 
   if (isLoading) {
-    return <span className="text-[10px] text-[#8A8E85]">đang tính…</span>;
+    return <span className="text-[10px] text-[#6B6F66]">đang tính…</span>;
   }
   if (failed || !risk) {
     return null;
