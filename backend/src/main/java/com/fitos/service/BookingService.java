@@ -42,6 +42,17 @@ public class BookingService {
             throw new IllegalStateException("Lớp học đã hết chỗ (Full capacity: " + session.getCapacity() + ")");
         }
 
+        // 3b. Không cho đặt lớp đã huỷ hoặc đã bắt đầu/qua giờ.
+        //     Trước đây hệ thống vẫn nhận đặt cho buổi 06:00 khi đã 12:30, và job
+        //     no-show lập tức đánh dấu NO_SHOW — hội viên mất lượt mà không tập được.
+        if (!"SCHEDULED".equalsIgnoreCase(session.getStatus())) {
+            throw new IllegalStateException("Buổi học này không còn nhận đặt chỗ (trạng thái: " + session.getStatus() + ")");
+        }
+        LocalDateTime sessionStart = LocalDateTime.of(session.getSessionDate(), session.getStartTime());
+        if (!sessionStart.isAfter(LocalDateTime.now())) {
+            throw new IllegalStateException("Buổi học này đã bắt đầu hoặc đã kết thúc, không thể đặt chỗ");
+        }
+
         // 4. Tăng số lượng đã đặt (Atomic increment)
         session.setBookedCount(session.getBookedCount() + 1);
         classSessionRepository.save(session);
