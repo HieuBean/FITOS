@@ -37,14 +37,20 @@ const QUICK_PROMPTS = [
 
 export default function AiCoachPage() {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'ai',
-      text: `Chào ${user?.fullName || 'bạn'}! Tôi là FITOS AI Workout Coach. Tôi sẽ dùng thông tin thể lực có trong hồ sơ của bạn để tư vấn. Bạn muốn hỏi về bài tập nào?`,
-      isSafe: true,
-      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-    },
-  ]);
+
+  // Câu chào phải trung thực: nhân viên (ADMIN/MANAGER/TRAINER) không có hồ sơ
+  // hội viên nên không có dữ liệu cân nặng/giới tính/lịch sử tập để AI dựa vào.
+  // Trước đây câu chào luôn khẳng định "dùng thông tin thể lực trong hồ sơ" —
+  // sai sự thật với các vai trò này.
+  const greetingFor = (fullName?: string, role?: string) => {
+    const name = fullName || 'bạn';
+    const isMember = !role || role.toUpperCase() === 'MEMBER';
+    return isMember
+      ? `Chào ${name}! Tôi là FITOS AI Workout Coach. Tôi sẽ dùng thông tin thể lực trong hồ sơ của bạn để tư vấn. Bạn muốn hỏi về bài tập nào?`
+      : `Chào ${name}! Tôi là FITOS AI Workout Coach. Tài khoản của bạn là nhân viên nên chưa có hồ sơ thể lực — tôi sẽ tư vấn dựa trên câu hỏi của bạn. Bạn muốn hỏi về bài tập nào?`;
+  };
+
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [recommendation, setRecommendation] = useState<RecommendationData | null>(null);
@@ -52,6 +58,22 @@ export default function AiCoachPage() {
   const [showRecModal, setShowRecModal] = useState(false);
   const [isLoadingRec, setIsLoadingRec] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Khởi tạo lời chào khi đã biết tên người dùng (tránh hiển thị "bạn" rồi đổi)
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.length === 0
+        ? [
+            {
+              role: 'ai',
+              text: greetingFor(user?.fullName, user?.role),
+              isSafe: true,
+              timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            },
+          ]
+        : prev,
+    );
+  }, [user?.fullName, user?.role]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -162,7 +184,7 @@ export default function AiCoachPage() {
               <span className="text-[11px] font-bold text-[#5E625A]">
                 {m.role === 'user' ? (user?.fullName || 'Bạn') : 'FITOS AI Coach'}
               </span>
-              {m.timestamp && <span className="text-[10px] text-[#8A8E85]">{m.timestamp}</span>}
+              {m.timestamp && <span className="text-[10px] text-[#6B6F66]">{m.timestamp}</span>}
             </div>
 
             <div
@@ -211,7 +233,7 @@ export default function AiCoachPage() {
 
       {/* Quick Prompts Bar */}
       <div className="bg-white border-t border-[#DADCD3] px-6 py-2 flex items-center gap-2 overflow-x-auto shrink-0 scrollbar-none">
-        <span className="text-[11px] font-bold text-[#8A8E85] shrink-0 uppercase tracking-wider">Gợi ý nhanh:</span>
+        <span className="text-[11px] font-bold text-[#6B6F66] shrink-0 uppercase tracking-wider">Gợi ý nhanh:</span>
         {QUICK_PROMPTS.map((prompt, i) => (
           <button
             key={i}
@@ -232,6 +254,7 @@ export default function AiCoachPage() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isLoading}
+          aria-label="Nhập câu hỏi cho huấn luyện viên AI"
           placeholder="Hỏi HLV AI về kỹ thuật bài tập, điều chỉnh mức tạ, đau mỏi cơ..."
           className="flex-1 border border-[#DADCD3] rounded-xl px-4 py-2.5 text-sm text-[#111310] bg-[#F5F5F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
         />
