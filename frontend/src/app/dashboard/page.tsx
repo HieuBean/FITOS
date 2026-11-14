@@ -116,11 +116,11 @@ export default function DashboardPage() {
             {/* Hàng 1: 4 Thẻ KPI chính */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A8E85] mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66] mb-2">
                   Doanh thu tháng này
                 </p>
                 <p className="text-3xl font-black text-[#111310]">
-                  {(stats?.revenueThisMonth ?? 0).toLocaleString()} <span className="text-base font-bold text-[#8A8E85]">VND</span>
+                  {(stats?.revenueThisMonth ?? 0).toLocaleString()} <span className="text-base font-bold text-[#6B6F66]">VND</span>
                 </p>
                 <p className="text-xs text-[#526B00] mt-1.5 font-bold flex items-center gap-1">
                   <span>Tiền thu từ thanh toán thành công</span>
@@ -128,7 +128,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A8E85] mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66] mb-2">
                   Hội Viên Đang Hoạt Động
                 </p>
                 <p className="text-3xl font-black text-[#111310]">
@@ -140,11 +140,11 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A8E85] mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66] mb-2">
                   Lớp Học Hôm Nay
                 </p>
                 <p className="text-3xl font-black text-[#111310]">
-                  {stats?.classesToday ?? 0} <span className="text-base font-bold text-[#8A8E85]">lớp</span>
+                  {stats?.classesToday ?? 0} <span className="text-base font-bold text-[#6B6F66]">lớp</span>
                 </p>
                 <p className="text-xs text-[#5E625A] mt-1.5 font-medium">
                   {stats?.bookedSpotsToday ?? 0} / {stats?.totalCapacityToday ?? 0} chỗ đã đặt
@@ -152,7 +152,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A8E85] mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66] mb-2">
                   Tỷ Lệ Lấp Đầy Lớp
                 </p>
                 <p className="text-3xl font-black text-[#111310]">
@@ -167,7 +167,7 @@ export default function DashboardPage() {
             {/* Hàng 2: 4 Thẻ KPI phụ */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white border border-[#DADCD3] rounded-xl p-4 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A8E85] mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6F66] mb-1">
                   Chuyển Đổi Lead
                 </p>
                 <p className="text-2xl font-black text-[#111310]">
@@ -177,7 +177,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-white border border-[#DADCD3] rounded-xl p-4 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A8E85] mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6F66] mb-1">
                   Lead Mới Tháng Này
                 </p>
                 <p className="text-2xl font-black text-[#111310]">
@@ -187,7 +187,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-white border border-[#DADCD3] rounded-xl p-4 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A8E85] mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6F66] mb-1">
                   Đã Chuyển Đổi
                 </p>
                 <p className="text-2xl font-black text-[#111310]">
@@ -197,7 +197,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-white border border-[#DADCD3] rounded-xl p-4 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A8E85] mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6F66] mb-1">
                   Lead Ở Bước Tập Thử
                 </p>
                 <p className="text-2xl font-black text-[#111310]">
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                     );
                   })}
                 </div>
-                <div className="flex items-center justify-between text-xs text-[#8A8E85] mt-3">
+                <div className="flex items-center justify-between text-xs text-[#6B6F66] mt-3">
                   <span>Theo dõi 6 tháng gần nhất</span>
                   <span className="text-[#526B00] font-bold">Dữ liệu thanh toán thực tế</span>
                 </div>

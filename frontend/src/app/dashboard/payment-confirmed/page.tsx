@@ -65,19 +65,19 @@ export default function PaymentConfirmedPage() {
 
           <div className="space-y-2 text-xs">
             <div className="flex justify-between">
-              <span className="text-[#8A8E85]">Purchased Plan</span>
+              <span className="text-[#6B6F66]">Purchased Plan</span>
               <span className="font-bold text-[#111310]">{planName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#8A8E85]">Paid Amount</span>
+              <span className="text-[#6B6F66]">Paid Amount</span>
               <span className="font-bold text-[#111310]">₫{amount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#8A8E85]">Payment Method</span>
+              <span className="text-[#6B6F66]">Payment Method</span>
               <span className="font-semibold text-[#111310]">{method}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#8A8E85]">Status</span>
+              <span className="text-[#6B6F66]">Status</span>
               <span className="font-bold text-[#526B00] bg-[#D7FF3F] px-2 py-0.5 rounded-full">
                 ACTIVE
               </span>
