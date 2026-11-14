@@ -99,13 +99,13 @@ export default function PaymentsPage() {
               <div className="bg-[#171A16] rounded-2xl p-7 text-white">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8A8E85] mb-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A8ADA2] mb-2">
                       Gói hiện tại
                     </p>
                     <h2 className="text-3xl font-bold text-[#ECEDE6] mb-1">
                       {activeMembership?.planName ?? 'Chưa có gói'}
                     </h2>
-                    <p className="text-[#8A8E85] text-sm">
+                    <p className="text-[#A8ADA2] text-sm">
                       {activeMembership
                         ? `${formatDate(activeMembership.startDate)} – ${formatDate(activeMembership.endDate)}`
                         : 'Mua gói để bắt đầu tập luyện'}
@@ -121,13 +121,13 @@ export default function PaymentsPage() {
 
                 <div className="flex items-end justify-between mt-6 pt-6 border-t border-[#2A2E29] gap-4">
                   <div>
-                    <p className="text-[11px] text-[#8A8E85] mb-1">Tổng đã thanh toán</p>
+                    <p className="text-[11px] text-[#A8ADA2] mb-1">Tổng đã thanh toán</p>
                     <p className="text-2xl font-bold text-[#ECEDE6]">{formatCurrency(totalPaid)}</p>
-                    <p className="text-xs text-[#8A8E85] mt-1">
+                    <p className="text-xs text-[#A8ADA2] mt-1">
                       {payments.length} giao dịch · {memberships.length} gói đã mua
                     </p>
                   </div>
-                  <span className="text-xs text-[#8A8E85] text-right max-w-[220px]">
+                  <span className="text-xs text-[#A8ADA2] text-right max-w-[220px]">
                     {activeMembership?.riskReason ?? 'Gia hạn tại quầy hoặc qua lễ tân để tiếp tục tập.'}
                   </span>
                 </div>
@@ -136,7 +136,7 @@ export default function PaymentsPage() {
               {/* Danh sách gói */}
               {memberships.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5E625A] mb-3">
                     Các gói của bạn
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -147,7 +147,7 @@ export default function PaymentsPage() {
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-[#111310] truncate">{membership.planName}</p>
-                          <p className="text-[11px] text-[#8A8E85]">
+                          <p className="text-[11px] text-[#5E625A]">
                             Hết hạn {formatDate(membership.endDate)}
                             {membership.pauseDaysUsed > 0 && ` · đã tạm dừng ${membership.pauseDaysUsed} ngày`}
                           </p>
@@ -165,13 +165,13 @@ export default function PaymentsPage() {
 
               {/* Payment history */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5E625A] mb-3">
                   Lịch sử thanh toán
                 </p>
                 <div className="bg-white border border-[#DADCD3] rounded-xl overflow-hidden">
                   <div className="grid grid-cols-[1.2fr_1.4fr_1fr_0.9fr] px-6 py-3 bg-[#F5F5F0] border-b border-[#DADCD3]">
                     {['Ngày', 'Mã giao dịch', 'Số tiền', 'Trạng thái'].map((col) => (
-                      <span key={col} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">
+                      <span key={col} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#5E625A]">
                         {col}
                       </span>
                     ))}
@@ -179,7 +179,7 @@ export default function PaymentsPage() {
                   {payments.length === 0 ? (
                     <div className="p-10 text-center">
                       <p className="text-sm font-bold text-[#111310]">Chưa có giao dịch nào</p>
-                      <p className="text-xs text-[#8A8E85] mt-1">Thanh toán gói tập sẽ hiển thị ở đây.</p>
+                      <p className="text-xs text-[#5E625A] mt-1">Thanh toán gói tập sẽ hiển thị ở đây.</p>
                     </div>
                   ) : (
                     <div className="divide-y divide-[#DADCD3]">
@@ -193,7 +193,7 @@ export default function PaymentsPage() {
                           </span>
                           <span className="text-sm font-medium text-[#111310] truncate">
                             {payment.transactionRef}
-                            <span className="block text-[10px] text-[#8A8E85]">{payment.paymentMethod}</span>
+                            <span className="block text-[10px] text-[#5E625A]">{payment.paymentMethod}</span>
                           </span>
                           <span className="text-sm font-semibold text-[#111310]">
                             {formatCurrency(Number(payment.amount))}

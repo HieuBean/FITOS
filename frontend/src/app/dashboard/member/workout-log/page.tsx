@@ -160,7 +160,7 @@ export default function WorkoutLogPage() {
                 &larr; Xem bảng tiến độ &amp; PRs
               </Link>
               <span className="text-gray-300">/</span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8A8E85]">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B6F66]">
                 WORKOUT LOG
               </span>
             </div>
@@ -203,7 +203,7 @@ export default function WorkoutLogPage() {
             {/* Set Logger Card */}
             <div className="bg-white border border-[#DADCD3] rounded-2xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-[#8A8E85]">
+                <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-[#6B6F66]">
                   Thông Số Set Đang Thực Hiện
                 </h2>
                 {selectedExercise && (
@@ -261,7 +261,7 @@ export default function WorkoutLogPage() {
                       >
                         <span className="truncate">{ex.name}</span>
                         <span className={`text-[9px] px-1.5 py-0.2 rounded uppercase ${
-                          isSelected ? 'bg-[#D7FF3F] text-[#111310]' : 'bg-[#DADCD3] text-[#5E625A]'
+                          isSelected ? 'bg-[#D7FF3F] text-[#111310]' : 'bg-[#DADCD3] text-[#3F433C]'
                         }`}>
                           {ex.muscleGroup}
                         </span>
@@ -274,8 +274,9 @@ export default function WorkoutLogPage() {
               {/* Set Inputs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div>
-                  <label className="block text-xs font-bold text-[#5E625A] mb-1">Hiệp (Set #)</label>
+                  <label htmlFor="setNumber" className="block text-xs font-bold text-[#5E625A] mb-1">Hiệp (Set #)</label>
                   <input
+                    id="setNumber"
                     type="number"
                     min="1"
                     value={setNumber}
@@ -284,8 +285,9 @@ export default function WorkoutLogPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#5E625A] mb-1">Số Reps</label>
+                  <label htmlFor="reps" className="block text-xs font-bold text-[#5E625A] mb-1">Số Reps</label>
                   <input
+                    id="reps"
                     type="number"
                     min="1"
                     value={reps}
@@ -294,8 +296,9 @@ export default function WorkoutLogPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#5E625A] mb-1">Mức tạ (kg)</label>
+                  <label htmlFor="weightKg" className="block text-xs font-bold text-[#5E625A] mb-1">Mức tạ (kg)</label>
                   <input
+                    id="weightKg"
                     type="number"
                     min="0"
                     step="2.5"
@@ -305,8 +308,9 @@ export default function WorkoutLogPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#5E625A] mb-1">RPE (1-10)</label>
+                  <label htmlFor="rpe" className="block text-xs font-bold text-[#5E625A] mb-1">RPE (1-10)</label>
                   <input
+                    id="rpe"
                     type="number"
                     min="1"
                     max="10"
@@ -332,7 +336,7 @@ export default function WorkoutLogPage() {
           <div className="lg:col-span-5">
             <div className="bg-white border border-[#DADCD3] rounded-2xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-[#8A8E85]">
+                <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-[#6B6F66]">
                   Nhật Ký Các Set Đã Tập ({loggedSets.length})
                 </h2>
                 {sessionActive && (
@@ -368,7 +372,7 @@ export default function WorkoutLogPage() {
                           {log.weightKg ? `${log.weightKg} kg` : 'Bodyweight'} × {log.repsActual} reps · RPE {log.rpe || 8}
                         </p>
                       </div>
-                      <span className="text-[11px] font-semibold text-[#8A8E85]">{log.loggedAt}</span>
+                      <span className="text-[11px] font-semibold text-[#6B6F66]">{log.loggedAt}</span>
                     </div>
                   ))}
                 </div>

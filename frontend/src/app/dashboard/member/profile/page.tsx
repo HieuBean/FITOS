@@ -185,8 +185,8 @@ export default function ProfilePage() {
             <div className="w-8 h-8 border-2 border-[#171A16] border-t-[#D7FF3F] rounded-full animate-spin mx-auto" />
           </div>
         ) : (
-          <div className="flex gap-6 items-start">
-            <div className="flex-1 space-y-5">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            <div className="flex-1 min-w-0 w-full space-y-5">
               <div className="bg-white border border-[#DADCD3] rounded-xl p-5 flex items-center gap-5">
                 <div className="w-20 h-20 rounded-full bg-[#D7FF3F] flex items-center justify-center text-2xl font-bold text-[#111310] shrink-0">
                   {initials || 'U'}
@@ -194,7 +194,7 @@ export default function ProfilePage() {
                 <div className="min-w-0">
                   <p className="text-lg font-bold text-[#111310] truncate">{form.fullName || 'Chưa đặt tên'}</p>
                   <p className="text-sm text-[#5E625A] truncate">{profile?.email}</p>
-                  <p className="text-[11px] text-[#8A8E85] mt-1">
+                  <p className="text-[11px] text-[#6B6F66] mt-1">
                     {profile?.roles?.map((role) => role.replace('ROLE_', '')).join(' · ') || 'MEMBER'}
                   </p>
                 </div>
@@ -307,7 +307,7 @@ export default function ProfilePage() {
               </form>
             </div>
 
-            <aside className="w-80 shrink-0 space-y-4">
+            <aside className="w-full lg:w-80 lg:shrink-0 space-y-4">
               <div className="bg-white border border-[#DADCD3] rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-[#111310] mb-4">Mục tiêu tập luyện</h3>
                 <div className="space-y-2">
@@ -358,7 +358,7 @@ export default function ProfilePage() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-xs text-[#8A8E85]">Chưa có gói tập — liên hệ lễ tân để đăng ký.</p>
+                  <p className="text-xs text-[#6B6F66]">Chưa có gói tập — liên hệ lễ tân để đăng ký.</p>
                 )}
               </div>
             </aside>
@@ -372,7 +372,7 @@ export default function ProfilePage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+      <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
         {label}
       </span>
       {children}
