@@ -29,17 +29,17 @@ export default function Hero() {
           <div className="flex items-center gap-8">
             <div>
               <p className="text-2xl font-bold text-[#111310]">2,400+</p>
-              <p className="text-xs text-[#8A8E85] mt-0.5">Active members</p>
+              <p className="text-xs text-[#5E625A] mt-0.5">Active members</p>
             </div>
             <div className="w-px h-8 bg-[#DADCD3]"></div>
             <div>
               <p className="text-2xl font-bold text-[#111310]">98%</p>
-              <p className="text-xs text-[#8A8E85] mt-0.5">Satisfaction rate</p>
+              <p className="text-xs text-[#5E625A] mt-0.5">Satisfaction rate</p>
             </div>
             <div className="w-px h-8 bg-[#DADCD3]"></div>
             <div>
               <p className="text-2xl font-bold text-[#111310]">40+</p>
-              <p className="text-xs text-[#8A8E85] mt-0.5">Classes weekly</p>
+              <p className="text-xs text-[#5E625A] mt-0.5">Classes weekly</p>
             </div>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function Hero() {
             <div className="absolute bottom-5 right-5 bg-white/90 backdrop-blur-sm border border-[#DADCD3] rounded-xl p-4 w-48">
               <p className="text-xs text-[#526B00] font-semibold mb-1">TODAY&apos;S CLASS</p>
               <p className="text-sm font-bold text-[#111310]">HIIT &amp; Strength</p>
-              <p className="text-xs text-[#8A8E85] mt-0.5">6:00 AM · 14 spots left</p>
+              <p className="text-xs text-[#5E625A] mt-0.5">6:00 AM · 14 spots left</p>
             </div>
           </div>
         </div>

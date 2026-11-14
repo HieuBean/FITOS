@@ -93,7 +93,7 @@ export default function ClassesPage() {
 
         <div className="bg-white sticky top-16 z-30 border-b border-[#DADCD3]">
           <div className="max-w-[1280px] mx-auto px-10 py-4">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="-mx-1 flex items-center gap-2 mb-3 overflow-x-auto pb-1">
               {DAY_LABELS.map((label, index) => (
                 <button
                   key={label}
@@ -116,7 +116,7 @@ export default function ClassesPage() {
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   activeType === 'ALL'
                     ? 'bg-[#D7FF3F] text-[#111310]'
-                    : 'bg-[#F5F5F0] text-[#8A8E85] hover:bg-[#DADCD3]'
+                    : 'bg-[#F5F5F0] text-[#5E625A] hover:bg-[#DADCD3]'
                 }`}
               >
                 Tất cả
@@ -129,7 +129,7 @@ export default function ClassesPage() {
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                     activeType === type
                       ? 'bg-[#D7FF3F] text-[#111310]'
-                      : 'bg-[#F5F5F0] text-[#8A8E85] hover:bg-[#DADCD3]'
+                      : 'bg-[#F5F5F0] text-[#5E625A] hover:bg-[#DADCD3]'
                   }`}
                 >
                   {type}
@@ -153,7 +153,7 @@ export default function ClassesPage() {
             ) : filtered.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-lg font-bold text-[#111310] mb-2">Không có lớp trong ngày này</p>
-                <p className="text-sm text-[#8A8E85]">Thử chọn ngày hoặc loại lớp khác.</p>
+                <p className="text-sm text-[#5E625A]">Thử chọn ngày hoặc loại lớp khác.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -163,12 +163,12 @@ export default function ClassesPage() {
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#526B00] bg-[#F5F5F0] px-2 py-1 rounded-full">
                         {session.category}
                       </span>
-                      <span className="text-xs text-[#8A8E85]">
+                      <span className="text-xs text-[#5E625A]">
                         {session.startTime?.slice(0, 5)} · {session.room}
                       </span>
                     </div>
                     <h3 className="text-base font-bold text-[#111310] mb-1">{session.className}</h3>
-                    <p className="text-sm text-[#8A8E85] mb-1">{session.trainerName || 'Chưa xếp HLV'}</p>
+                    <p className="text-sm text-[#5E625A] mb-1">{session.trainerName || 'Chưa xếp HLV'}</p>
                     <p className="text-xs text-[#5E625A] mb-4">
                       {session.bookedCount}/{session.capacity} chỗ đã đặt
                     </p>

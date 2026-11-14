@@ -135,8 +135,8 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {studios.length > 1 && (
           <div>
-            <label className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase">Studio</label>
-            <select required value={studioId ?? ''} onChange={(e) => setStudioId(Number(e.target.value))}
+            <label htmlFor="login-studio" className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase">Studio</label>
+            <select id="login-studio" required value={studioId ?? ''} onChange={(e) => setStudioId(Number(e.target.value))}
               className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm">
               <option value="">Chọn Studio</option>
               {studios.map((studio) => <option key={studio.id} value={studio.id}>{studio.name}</option>)}
@@ -144,37 +144,45 @@ function LoginForm() {
           </div>
         )}
         <div>
-          <label className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
+          <label htmlFor="login-email" className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
             Địa chỉ Email
           </label>
           <input
+            id="login-email"
+            name="email"
             type="email"
+            autoComplete="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={accountType === 'member' ? 'hoivien@fitos.io' : 'quanly@fitos.io'}
+            aria-invalid={!!errorMsg}
             disabled={isSubmitting}
-            className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all disabled:opacity-60"
+            className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#5E625A] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all disabled:opacity-60"
           />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-semibold text-[#111310] uppercase tracking-[0.05em]">
+            <label htmlFor="login-password" className="block text-xs font-semibold text-[#111310] uppercase tracking-[0.05em]">
               Mật khẩu
             </label>
-            <a href="#" className="text-xs text-[#526B00] font-medium hover:underline">
+            <a href="/forgot-password" className="text-xs text-[#526B00] font-medium hover:underline">
               Quên mật khẩu?
             </a>
           </div>
           <input
+            id="login-password"
+            name="password"
             type="password"
+            autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            aria-invalid={!!errorMsg}
             disabled={isSubmitting}
-            className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all disabled:opacity-60"
+            className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#5E625A] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all disabled:opacity-60"
           />
         </div>
 
@@ -237,14 +245,14 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-white">Đội ngũ Huấn Luyện FITOS</p>
-                <p className="text-[10px] text-[#8A8E85]">Hệ Thống Studio & Flagship Hubs</p>
+                <p className="text-[10px] text-[#A8ADA2]">Hệ Thống Studio & Flagship Hubs</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Thông tin chân trang */}
-        <div className="z-10 flex items-center justify-between text-xs text-[#8A8E85]">
+        <div className="z-10 flex items-center justify-between text-xs text-[#A8ADA2]">
           <span>© 2026 Hệ thống FITOS</span>
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#D7FF3F] inline-block animate-pulse"></span>

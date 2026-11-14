@@ -96,21 +96,21 @@ export default function RegisterPage() {
             <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10">
               <div>
                 <p className="text-xl font-black text-[#D7FF3F]">2,400+</p>
-                <p className="text-[11px] text-[#8A8E85] mt-0.5">Hội viên thường xuyên</p>
+                <p className="text-[11px] text-[#A8ADA2] mt-0.5">Hội viên thường xuyên</p>
               </div>
               <div>
                 <p className="text-xl font-black text-[#D7FF3F]">40+</p>
-                <p className="text-[11px] text-[#8A8E85] mt-0.5">Lớp học mỗi tuần</p>
+                <p className="text-[11px] text-[#A8ADA2] mt-0.5">Lớp học mỗi tuần</p>
               </div>
               <div>
                 <p className="text-xl font-black text-[#D7FF3F]">100%</p>
-                <p className="text-[11px] text-[#8A8E85] mt-0.5">Đồng bộ đám mây</p>
+                <p className="text-[11px] text-[#A8ADA2] mt-0.5">Đồng bộ đám mây</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="z-10 text-xs text-[#8A8E85]">
+        <div className="z-10 text-xs text-[#A8ADA2]">
           FITOS Studio OS · Nền tảng Quản lý Phòng tập Thế hệ mới
         </div>
       </div>
@@ -136,8 +136,8 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {studios.length > 1 && (
               <div>
-                <label className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase">Studio</label>
-                <select required value={studioId ?? ''} onChange={(e) => setStudioId(Number(e.target.value))}
+                <label htmlFor="reg-studio" className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase">Studio</label>
+                <select id="reg-studio" required value={studioId ?? ''} onChange={(e) => setStudioId(Number(e.target.value))}
                   className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm">
                   <option value="">Chọn Studio</option>
                   {studios.map((studio) => <option key={studio.id} value={studio.id}>{studio.name}</option>)}
@@ -145,60 +145,72 @@ export default function RegisterPage() {
               </div>
             )}
             <div>
-              <label className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
+              <label htmlFor="reg-fullname" className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
                 Họ và tên <span className="text-red-500">*</span>
               </label>
               <input
+                id="reg-fullname"
+                name="fullName"
                 type="text"
+                autoComplete="name"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Nguyễn Văn An"
-                className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+                className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#5E625A] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
+                <label htmlFor="reg-email" className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="reg-email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="an.nguyen@fitos.io"
-                  className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+                  className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#5E625A] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
+                <label htmlFor="reg-phone" className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
                   Số điện thoại
                 </label>
                 <input
+                  id="reg-phone"
+                  name="phone"
                   type="tel"
+                  autoComplete="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="0901 234 567"
-                  className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+                  className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#5E625A] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
+              <label htmlFor="reg-password" className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
                 Mật khẩu <span className="text-red-500">*</span>
               </label>
               <input
+                id="reg-password"
+                name="password"
                 type="password"
+                autoComplete="new-password"
                 required
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Tối thiểu 6 ký tự"
-                className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+                className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#5E625A] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
               />
             </div>
 

@@ -75,7 +75,7 @@ export default function LandingPage() {
             ].map((m) => (
               <div key={m.label} className="text-center">
                 <p className="text-xl font-bold text-[#111310]">{m.value}</p>
-                <p className="text-xs text-[#8A8E85] mt-0.5">{m.label}</p>
+                <p className="text-xs text-[#5E625A] mt-0.5">{m.label}</p>
               </div>
             ))}
           </div>
@@ -96,10 +96,10 @@ export default function LandingPage() {
                 <div key={c.id} className="bg-white border border-[#DADCD3] rounded-xl p-5">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#526B00] bg-[#F5F5F0] px-2 py-1 rounded-full">{c.type}</span>
-                    <span className="text-xs text-[#8A8E85]">{c.time}</span>
+                    <span className="text-xs text-[#5E625A]">{c.time}</span>
                   </div>
                   <h3 className="text-base font-bold text-[#111310] mb-1">{c.name}</h3>
-                  <p className="text-sm text-[#8A8E85] mb-4">{c.trainer}</p>
+                  <p className="text-sm text-[#5E625A] mb-4">{c.trainer}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-[#5E625A]">{c.spots} spots left</span>
                     <a href="/register" className="bg-[#D7FF3F] text-[#111310] font-semibold rounded-lg px-4 py-1.5 text-xs hover:bg-[#C4E82E] transition-colors">Book</a>
@@ -124,7 +124,7 @@ export default function LandingPage() {
                   </div>
                   <h3 className="text-sm font-bold text-[#111310] mb-1">{c.name}</h3>
                   <p className="text-xs text-[#5E625A] mb-2">{c.role}</p>
-                  <p className="text-[10px] text-[#8A8E85]">{c.years} years experience</p>
+                  <p className="text-[10px] text-[#5E625A]">{c.years} years experience</p>
                 </div>
               ))}
             </div>
@@ -145,10 +145,10 @@ export default function LandingPage() {
                     : 'bg-white border-[#DADCD3]'
                 }`}>
                   <h3 className={`text-lg font-bold mb-1 ${ p.highlight ? 'text-white' : 'text-[#111310]' }`}>{p.name}</h3>
-                  <p className={`text-xs mb-4 ${ p.highlight ? 'text-[#8A8E85]' : 'text-[#5E625A]' }`}>{p.desc}</p>
+                  <p className={`text-xs mb-4 ${ p.highlight ? 'text-[#A8ADA2]' : 'text-[#5E625A]' }`}>{p.desc}</p>
                   <div className="flex items-baseline gap-1 mb-6">
                     <span className={`text-3xl font-bold ${ p.highlight ? 'text-[#D7FF3F]' : 'text-[#111310]' }`}>{p.price}</span>
-                    <span className={`text-sm ${ p.highlight ? 'text-[#8A8E85]' : 'text-[#5E625A]' }`}>{p.period}</span>
+                    <span className={`text-sm ${ p.highlight ? 'text-[#A8ADA2]' : 'text-[#5E625A]' }`}>{p.period}</span>
                   </div>
                   <ul className="space-y-2 mb-7">
                     {p.features.map((f) => (
@@ -190,7 +190,7 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-[#111310]">{t.name}</p>
-                      <p className="text-xs text-[#8A8E85]">{t.plan}</p>
+                      <p className="text-xs text-[#5E625A]">{t.plan}</p>
                     </div>
                   </div>
                 </div>
@@ -219,7 +219,7 @@ export default function LandingPage() {
         <section className="bg-[#171A16] py-20">
           <div className="max-w-[1280px] mx-auto px-10 text-center">
             <h2 className="text-[38px] font-bold text-white mb-4">Ready to start training?</h2>
-            <p className="text-base text-[#8A8E85] max-w-md mx-auto mb-8">Join thousands of members already training smarter with FITOS.</p>
+            <p className="text-base text-[#A8ADA2] max-w-md mx-auto mb-8">Join thousands of members already training smarter with FITOS.</p>
             <div className="flex items-center justify-center gap-4">
               <a href="/register" className="bg-[#D7FF3F] text-[#111310] font-semibold rounded-lg px-6 py-3 text-sm hover:bg-[#C4E82E] transition-colors">Start free trial</a>
               <a href="/plans" className="border border-white/20 text-[#ECEDE6] font-semibold rounded-lg px-6 py-3 text-sm hover:bg-white/5 transition-colors">View plans</a>

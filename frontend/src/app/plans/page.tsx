@@ -138,26 +138,30 @@ export default function PlansPage() {
                     </h2>
                     <p
                       className={`text-xs mb-6 ${
-                        p.highlight ? 'text-[#8A8E85]' : 'text-[#5E625A]'
+                        p.highlight ? 'text-[#A8ADA2]' : 'text-[#5E625A]'
                       }`}
                     >
                       {p.description}
                     </p>
 
-                    <div className="flex items-baseline gap-1 mb-8">
+                    <div className="flex flex-wrap items-baseline gap-1 mb-8">
                       <span
                         className={`text-3xl md:text-4xl font-extrabold ${
                           p.highlight ? 'text-[#D7FF3F]' : 'text-[#111310]'
                         }`}
                       >
-                        ₫{Number(p.price).toLocaleString()}
+                        {/* Định dạng cố định (vi-VN) để server và client cho ra cùng
+                            chuỗi — trước đây toLocaleString() không tham số khiến bản
+                            render server (en-US) khác client (vi-VN) và gây lỗi
+                            hydration React #425. */}
+                        {new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Number(p.price))} ₫
                       </span>
                       <span
-                        className={`text-xs ${
-                          p.highlight ? 'text-[#8A8E85]' : 'text-[#5E625A]'
+                        className={`text-xs whitespace-nowrap ${
+                          p.highlight ? 'text-[#A8ADA2]' : 'text-[#5E625A]'
                         }`}
                       >
-                        /{p.durationDays} days
+                        /{p.durationDays} ngày
                       </span>
                     </div>
 
@@ -210,7 +214,7 @@ export default function PlansPage() {
                   className="bg-white border border-[#DADCD3] rounded-xl p-6 shadow-sm"
                 >
                   <h3 className="text-base font-bold text-[#111310] mb-1">{pt.sessions}</h3>
-                  <p className="text-xs text-[#8A8E85] mb-4">{pt.note}</p>
+                  <p className="text-xs text-[#5E625A] mb-4">{pt.note}</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-black text-[#111310]">{pt.price}</span>
                     <span className="text-xs text-[#5E625A]">{pt.per}</span>

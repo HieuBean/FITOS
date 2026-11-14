@@ -41,7 +41,7 @@ export default function ForStudioTeams() {
           {metrics.map((m) => (
             <div key={m.label} className="text-center">
               <p className="text-3xl font-bold text-[#111310] mb-1">{m.value}</p>
-              <p className="text-xs text-[#8A8E85]">{m.label}</p>
+              <p className="text-xs text-[#5E625A]">{m.label}</p>
             </div>
           ))}
         </div>
