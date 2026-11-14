@@ -60,9 +60,11 @@ public class SecurityConfig {
                     "/actuator/**"
                 ).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/studios").permitAll()
-                // Trang marketing công khai + webhook thanh toán (không dùng JWT)
+                // Trang marketing công khai: bảng giá, thời khoá biểu lớp, danh sách buổi học.
+                // /api/sessions cần thiết để trang /classes hiển thị lịch mà không cần đăng nhập.
                 .requestMatchers(org.springframework.http.HttpMethod.GET,
-                    "/api/plans/**", "/api/classes/**").permitAll()
+                    "/api/plans/**", "/api/classes/**", "/api/sessions/**").permitAll()
+                // Webhook thanh toán (không dùng JWT) — xác thực bằng chữ ký trong PaymentService.
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/payments/callback").permitAll()
                 .anyRequest().authenticated()
             )
