@@ -51,15 +51,15 @@ public class AiRecommendationService {
         body.put("feedback_or_pain_note", feedbackOrPainNote);
         body.put("fitness_profile", profile(customer, studioId));
         List<Map<String, Object>> plans = jdbc.queryForList(
-                "SELECT id, title FROM workout_plans WHERE customer_id = ? AND studio_id = ? AND status = 'ACTIVE' " +
+                "SELECT id, name FROM workout_plans WHERE customer_id = ? AND studio_id = ? AND status = 'ACTIVE' " +
                         "ORDER BY start_date DESC, id DESC LIMIT 1", customer.getId(), studioId);
         if (!plans.isEmpty()) {
             Map<String, Object> plan = plans.get(0);
-            body.put("current_plan_name", plan.get("title"));
+            body.put("current_plan_name", plan.get("name"));
             body.put("current_exercises", jdbc.queryForList(
-                    "SELECT e.name, pe.target_sets, pe.target_reps_min, pe.target_reps_max, pe.target_weight_kg " +
+                    "SELECT e.name, pe.sets, pe.reps, pe.weight_suggest " +
                             "FROM workout_plan_exercises pe JOIN exercises e ON e.id = pe.exercise_id " +
-                            "WHERE pe.plan_id = ? AND pe.studio_id = ? ORDER BY pe.day_of_week, pe.order_index",
+                            "WHERE pe.workout_plan_id = ? AND pe.studio_id = ? ORDER BY pe.day_of_week, pe.sort_order",
                     plan.get("id"), studioId));
         } else {
             body.put("current_exercises", List.of());
