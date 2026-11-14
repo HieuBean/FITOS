@@ -7,6 +7,7 @@ import com.fitos.repository.CustomerRepository;
 import com.fitos.repository.ExerciseRepository;
 import com.fitos.repository.TrainerRepository;
 import com.fitos.repository.WorkoutPlanRepository;
+import com.fitos.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class WorkoutPlanService {
     private final CustomerRepository customerRepository;
     private final TrainerRepository trainerRepository;
     private final ExerciseRepository exerciseRepository;
+    private final CurrentMemberService currentMember;
 
     @Transactional(readOnly = true)
     public List<WorkoutDto.PlanResponse> findAll(Long customerId) {
@@ -38,6 +40,15 @@ public class WorkoutPlanService {
                 .collect(Collectors.toList());
     }
 
+    /** Nhân viên xem được tất cả; hội viên chỉ thấy giáo án của chính mình. */
+    @Transactional(readOnly = true)
+    public List<WorkoutDto.PlanResponse> findAllForViewer(Long customerId, UserPrincipal principal) {
+        if (currentMember.isStaff(principal)) {
+            return findAll(customerId);
+        }
+        return getCustomerPlansForViewer(customerId, principal);
+    }
+
     @Transactional(readOnly = true)
     public List<WorkoutDto.PlanResponse> getCustomerPlans(Long customerId) {
         return workoutPlanRepository.findByCustomerId(customerId).stream()
@@ -46,9 +57,33 @@ public class WorkoutPlanService {
     }
 
     @Transactional(readOnly = true)
+    public List<WorkoutDto.PlanResponse> getCustomerPlansForViewer(Long customerId, UserPrincipal principal) {
+        Long ownCustomerId = currentMember.require(principal).getId();
+        if (customerId != null && !customerId.equals(ownCustomerId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Bạn chỉ xem được giáo án của chính mình");
+        }
+        return getCustomerPlans(ownCustomerId);
+    }
+
+    @Transactional(readOnly = true)
     public WorkoutDto.PlanResponse getById(Long planId) {
         WorkoutPlan plan = workoutPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Workout Plan not found: " + planId));
+        return mapToPlanResponse(plan);
+    }
+
+    @Transactional(readOnly = true)
+    public WorkoutDto.PlanResponse getByIdForViewer(Long planId, UserPrincipal principal) {
+        WorkoutPlan plan = workoutPlanRepository.findById(planId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workout Plan not found: " + planId));
+        if (!currentMember.isStaff(principal)) {
+            Long ownCustomerId = currentMember.require(principal).getId();
+            if (plan.getCustomer() == null || !ownCustomerId.equals(plan.getCustomer().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Bạn chỉ xem được giáo án của chính mình");
+            }
+        }
         return mapToPlanResponse(plan);
     }
 
@@ -62,6 +97,14 @@ public class WorkoutPlanService {
             trainer = trainerRepository.findById(req.getTrainerId()).orElse(null);
         }
 
+        // start_date là NOT NULL ở DB. Nếu client không gửi (form thiết kế giáo án
+        // không có trường này) thì mặc định hôm nay thay vì để DB ném lỗi 500.
+        LocalDate startDate = req.getStartDate() != null ? req.getStartDate() : LocalDate.now();
+        LocalDate endDate = req.getEndDate();
+        if (endDate != null && endDate.isBefore(startDate)) {
+            throw new com.fitos.exception.BadRequestException("Ngày kết thúc không được trước ngày bắt đầu");
+        }
+
         WorkoutPlan plan = WorkoutPlan.builder()
                 .customer(customer)
                 .trainer(trainer)
@@ -69,8 +112,8 @@ public class WorkoutPlanService {
                 .description(req.getDescription())
                 .goal(req.getGoal())
                 .status("DRAFT")
-                .startDate(req.getStartDate())
-                .endDate(req.getEndDate())
+                .startDate(startDate)
+                .endDate(endDate)
                 .exercises(new ArrayList<>())
                 .build();
 
