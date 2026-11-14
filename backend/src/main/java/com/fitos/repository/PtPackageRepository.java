@@ -12,6 +12,8 @@ public interface PtPackageRepository extends JpaRepository<PtPackage, Long> {
 
     List<PtPackage> findByCustomerId(Long customerId);
 
+    List<PtPackage> findByCustomerIdOrderByExpiresAtDesc(Long customerId);
+
     Optional<PtPackage> findByCustomerIdAndStatus(Long customerId, String status);
 
     Optional<PtPackage> findByIdAndStudioId(Long id, Long studioId);

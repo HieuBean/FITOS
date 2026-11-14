@@ -15,10 +15,20 @@ import java.util.Optional;
 @Repository
 public interface LeadRepository extends JpaRepository<Lead, Long> {
 
+    /**
+     * Lọc lead theo trạng thái / nguồn / từ khoá.
+     *
+     * <p>Các tham số lọc đều có thể null. Trên PostgreSQL, khi Hibernate bind một
+     * tham số null mà không nói rõ kiểu, server suy ra {@code bytea} và câu lệnh
+     * {@code lower(...)} sẽ lỗi "function lower(bytea) does not exist". Vì vậy ép
+     * kiểu tường minh bằng {@code CAST(... AS string)}.
+     */
     @Query("SELECT l FROM Lead l WHERE l.studioId = :studioId AND " +
-           "(:status IS NULL OR l.status = :status) AND " +
-           "(:source IS NULL OR l.source = :source) AND " +
-           "(:search IS NULL OR LOWER(l.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR l.phone LIKE CONCAT('%', :search, '%'))")
+           "(CAST(:status AS string) IS NULL OR l.status = :status) AND " +
+           "(CAST(:source AS string) IS NULL OR l.source = :source) AND " +
+           "(CAST(:search AS string) IS NULL " +
+           " OR LOWER(l.fullName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           " OR l.phone LIKE CONCAT('%', CAST(:search AS string), '%'))")
     Page<Lead> findWithFilters(
             @Param("studioId") Long studioId,
             @Param("status") String status,

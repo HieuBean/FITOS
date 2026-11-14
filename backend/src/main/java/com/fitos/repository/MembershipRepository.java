@@ -15,6 +15,10 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
 
     Optional<Membership> findByIdAndStudioId(Long id, Long studioId);
 
+    List<Membership> findByCustomerIdOrderByEndDateDesc(Long customerId);
+
+    List<Membership> findByCustomerIdInOrderByEndDateDesc(java.util.Collection<Long> customerIds);
+
     List<Membership> findByCustomerIdAndStudioIdOrderByEndDateDesc(Long customerId, Long studioId);
 
     List<Membership> findByStudioIdAndStatusOrderByEndDateAsc(Long studioId, String status);
