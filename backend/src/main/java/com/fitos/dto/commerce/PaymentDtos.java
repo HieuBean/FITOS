@@ -16,7 +16,7 @@ public final class PaymentDtos {
 
     public record PaymentRequest(
             @NotNull Long orderId,
-            @NotBlank @Pattern(regexp = "CASH|BANK_TRANSFER|VNPAY|MOMO|STRIPE|OTHER",
+            @NotBlank @Pattern(regexp = "CASH|CARD|BANK_TRANSFER|VNPAY|MOMO|STRIPE|OTHER",
                     message = "paymentMethod không hợp lệ") String paymentMethod,
             /** Không bắt buộc: nếu gửi lên phải khớp đúng tổng tiền server tự tính. */
             @DecimalMin(value = "0.0") BigDecimal amount,
