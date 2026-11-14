@@ -1,9 +1,9 @@
 package com.fitos.common.security;
 
-import com.fitos.customer.Customer;
-import com.fitos.customer.CustomerRepository;
-import com.fitos.user.User;
-import com.fitos.user.UserRepository;
+import com.fitos.model.Customer;
+import com.fitos.repository.CustomerRepository;
+import com.fitos.model.User;
+import com.fitos.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;

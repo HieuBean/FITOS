@@ -40,6 +40,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class OpsService {
+    private final com.fitos.security.StudioResolver studioResolver;
 
     private static final String SESSION_SELECT = """
             SELECT cs.id, cs.class_id, c.name AS class_name, c.category, c.color_code,
@@ -86,7 +87,7 @@ public class OpsService {
     // ------------------------------------------------------------------ classes
     @Transactional(readOnly = true)
     public List<ClassResponse> listClasses(boolean activeOnly) {
-        Long studioId = StudioContext.currentStudioId();
+        Long studioId = studioResolver.resolveForPublicRead(null);
         return (activeOnly ? classRepository.findByStudioIdAndIsActiveTrueOrderByNameAsc(studioId)
                 : classRepository.findByStudioIdOrderByNameAsc(studioId))
                 .stream().map(this::toClassResponse).toList();
@@ -128,7 +129,7 @@ public class OpsService {
     // ----------------------------------------------------------------- sessions
     @Transactional(readOnly = true)
     public List<SessionResponse> listSessions(LocalDate from, LocalDate to) {
-        Long studioId = StudioContext.currentStudioId();
+        Long studioId = studioResolver.resolveForPublicRead(null);
         LocalDate start = from == null ? LocalDate.now() : from;
         LocalDate end = to == null ? start.plusDays(6) : to;
         if (end.isBefore(start)) {
@@ -140,7 +141,7 @@ public class OpsService {
 
     @Transactional(readOnly = true)
     public List<SessionResponse> sessionsOfClass(Long classId) {
-        Long studioId = StudioContext.currentStudioId();
+        Long studioId = studioResolver.resolveForPublicRead(null);
         return jdbc.query(SESSION_SELECT + " AND cs.class_id = ? ORDER BY cs.session_date DESC, cs.start_time DESC",
                 sessionMapper, studioId, classId);
     }

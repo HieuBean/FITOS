@@ -172,7 +172,9 @@ public class PtSessionScheduleService {
         Integer count = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM pt_sessions WHERE studio_id = ? AND trainer_id = ? AND session_date = ? " +
                         "AND status IN ('SCHEDULED', 'IN_PROGRESS') AND start_time < ? AND end_time > ? " +
-                        "AND (? IS NULL OR id <> ?)",
+                        // Ép kiểu tường minh: tham số null không nói rõ kiểu làm PostgreSQL
+                        // suy ra bytea và phép so sánh id <> ? sẽ lỗi.
+                        "AND (CAST(? AS BIGINT) IS NULL OR id <> ?)",
                 Integer.class, studioId, trainerId, Date.valueOf(date), Time.valueOf(end), Time.valueOf(start),
                 excludeId, excludeId);
         return count == null ? 0 : count;

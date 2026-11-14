@@ -26,10 +26,11 @@ public class PlanService {
 
     private final ServicePlanRepository planRepository;
     private final ObjectMapper objectMapper;
+    private final com.fitos.security.StudioResolver studioResolver;
 
     @Transactional(readOnly = true)
     public List<PlanResponse> list(boolean includeInactive) {
-        Long studioId = StudioContext.currentStudioId();
+        Long studioId = studioResolver.resolveForPublicRead(null);
         List<ServicePlan> plans = includeInactive
                 ? planRepository.findByStudioIdOrderByPlanTypeAscPriceAsc(studioId)
                 : planRepository.findByStudioIdAndIsActiveTrueOrderByPriceAsc(studioId);
