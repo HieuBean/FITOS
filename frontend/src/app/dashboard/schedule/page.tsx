@@ -97,7 +97,7 @@ export default function SchedulePage() {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[11px] uppercase tracking-[0.08em] text-[#8A8E85]">Tổng buổi trong tuần</p>
+              <p className="text-[11px] uppercase tracking-[0.08em] text-[#6B6F66]">Tổng buổi trong tuần</p>
               <p className="text-2xl font-black text-[#111310]">{sessions.length}</p>
             </div>
           </div>
@@ -126,14 +126,14 @@ export default function SchedulePage() {
                   </span>{' '}
                   — {topSuggestion.reason}
                 </p>
-                <p className="text-[10px] text-[#8A8E85] mt-1">
+                <p className="text-[10px] text-[#A8ADA2] mt-1">
                   Nguồn: {suggestion?.source === 'ai-operations' ? 'ai-operations' : 'rule-based (fallback)'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowSuggestion(false)}
-                className="text-[#8A8E85] hover:text-white text-sm"
+                className="text-[#6B6F66] hover:text-white text-sm"
                 aria-label="Đóng gợi ý"
               >
                 ✕
@@ -180,7 +180,7 @@ export default function SchedulePage() {
                     <div className={`text-center py-2 rounded-lg mb-3 ${isToday ? 'bg-[#D7FF3F]' : 'bg-transparent'}`}>
                       <p
                         className={`text-xs font-semibold uppercase tracking-[0.08em] ${
-                          isToday ? 'text-[#526B00]' : 'text-[#8A8E85]'
+                          isToday ? 'text-[#526B00]' : 'text-[#6B6F66]'
                         }`}
                       >
                         {DAY_LABELS[index]}
@@ -197,7 +197,7 @@ export default function SchedulePage() {
                         style={{ borderLeftColor: session.colorCode || '#D7FF3F' }}
                       >
                         <p className="font-semibold text-[#111310] truncate">{session.className}</p>
-                        <p className="text-[#8A8E85] mt-0.5">{session.startTime?.slice(0, 5)}</p>
+                        <p className="text-[#6B6F66] mt-0.5">{session.startTime?.slice(0, 5)}</p>
                         <p className="text-[#5E625A] truncate">{session.trainerName || 'Chưa xếp HLV'}</p>
                         <p className="text-[#526B00] font-semibold mt-1">
                           {session.bookedCount}/{session.capacity}

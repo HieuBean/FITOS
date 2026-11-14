@@ -195,28 +195,28 @@ export default function CreateSalePage() {
         </div>
 
         {/* Wizard Step Indicator */}
-        <div className="flex items-center gap-4 mt-6">
+        <div className="flex items-center gap-2 sm:gap-4 mt-6 overflow-x-auto pb-1">
           {[
             { num: 1, title: 'Select Member & Plan' },
             { num: 2, title: 'Pricing & Terms' },
             { num: 3, title: 'Payment & Review' },
           ].map((s) => (
-            <div key={s.num} className="flex items-center gap-2">
+            <div key={s.num} className="flex items-center gap-2 shrink-0">
               <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                   step >= s.num ? 'bg-[#171A16] text-[#D7FF3F]' : 'bg-[#DADCD3] text-[#5E625A]'
                 }`}
               >
                 {s.num}
               </div>
               <span
-                className={`text-xs font-semibold ${
-                  step === s.num ? 'text-[#111310]' : 'text-[#8A8E85]'
+                className={`text-xs font-semibold whitespace-nowrap ${
+                  step === s.num ? 'text-[#111310]' : 'text-[#6B6F66]'
                 }`}
               >
                 {s.title}
               </span>
-              {s.num < 3 && <div className="w-8 h-px bg-[#DADCD3] mx-1" />}
+              {s.num < 3 && <div className="w-6 sm:w-8 h-px bg-[#DADCD3] mx-0 sm:mx-1 shrink-0" />}
             </div>
           ))}
         </div>
@@ -261,6 +261,7 @@ export default function CreateSalePage() {
                     <div>
                       <input
                         type="text"
+                        aria-label="Tìm hội viên theo tên hoặc email"
                         placeholder="Search member by name or email..."
                         value={customerSearch}
                         onChange={(e) => setCustomerSearch(e.target.value)}
@@ -278,7 +279,7 @@ export default function CreateSalePage() {
                               className="w-full text-left p-3 hover:bg-[#F9FFDF] text-sm flex items-center justify-between"
                             >
                               <span className="font-semibold text-[#111310]">{c.fullName}</span>
-                              <span className="text-xs text-[#8A8E85]">{c.email}</span>
+                              <span className="text-xs text-[#6B6F66]">{c.email}</span>
                             </button>
                           ))}
                         </div>
@@ -344,7 +345,7 @@ export default function CreateSalePage() {
                 <h2 className="text-sm font-bold text-[#111310]">Terms & Discounts</h2>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
                     Activation Start Date
                   </label>
                   <input
@@ -353,13 +354,13 @@ export default function CreateSalePage() {
                     onChange={(e) => setStartDate(e.target.value)}
                     className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310]"
                   />
-                  <p className="text-xs text-[#8A8E85] mt-1">
+                  <p className="text-xs text-[#6B6F66] mt-1">
                     Valid for {activePlan?.durationDays || 30} days from activation.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
                     Discount Amount (₫)
                   </label>
                   <input
@@ -373,7 +374,7 @@ export default function CreateSalePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
                     Staff Notes / Promo Code
                   </label>
                   <textarea
@@ -455,7 +456,7 @@ export default function CreateSalePage() {
           {/* Right Column: Order Summary Card */}
           <div>
             <div className="bg-white border border-[#DADCD3] rounded-xl p-6 sticky top-6 shadow-sm">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-[#8A8E85] mb-4">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-[#6B6F66] mb-4">
                 Order Summary
               </h3>
 

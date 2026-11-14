@@ -164,8 +164,9 @@ export default function CustomersPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Tìm hội viên theo tên, email hoặc số điện thoại"
             placeholder="Search by name, email or phone..."
-            className="w-full md:max-w-md bg-white border border-[#DADCD3] rounded-lg px-4 py-2.5 text-sm text-[#111310] placeholder-[#8A8E85] focus:outline-none focus:ring-2 focus:ring-[#D7FF3F]"
+            className="w-full md:max-w-md bg-white border border-[#DADCD3] rounded-lg px-4 py-2.5 text-sm text-[#111310] placeholder-[#6B6F66] focus:outline-none focus:ring-2 focus:ring-[#D7FF3F]"
           />
 
           <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
@@ -196,7 +197,7 @@ export default function CustomersPage() {
           {/* Header */}
           <div className="grid grid-cols-[2fr_2fr_1.5fr_1fr_1.2fr_1fr] px-6 py-3.5 bg-[#F5F5F0]">
             {['Name', 'Email', 'Plan', 'Status', 'Expiry Date', 'Actions'].map((col) => (
-              <span key={col} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">
+              <span key={col} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66]">
                 {col}
               </span>
             ))}
@@ -204,9 +205,9 @@ export default function CustomersPage() {
 
           {/* Rows */}
           {loading ? (
-            <div className="p-8 text-center text-sm text-[#8A8E85]">Loading customers...</div>
+            <div className="p-8 text-center text-sm text-[#6B6F66]">Loading customers...</div>
           ) : customers.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[#8A8E85]">No customers found matching filter.</div>
+            <div className="p-8 text-center text-sm text-[#6B6F66]">No customers found matching filter.</div>
           ) : (
             <div className="divide-y divide-[#DADCD3]">
               {customers.map((c) => {

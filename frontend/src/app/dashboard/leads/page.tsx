@@ -142,7 +142,7 @@ export default function LeadsPage() {
         {/* 4 Thẻ KPI tóm tắt */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white border border-[#DADCD3] rounded-xl p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
               Tổng số Lead
             </p>
             <p className="text-3xl font-black text-[#111310]">{stats.total}</p>
@@ -150,7 +150,7 @@ export default function LeadsPage() {
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-xl p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
               Đang Liên Hệ
             </p>
             <p className="text-3xl font-black text-[#111310]">{stats.contacted}</p>
@@ -158,7 +158,7 @@ export default function LeadsPage() {
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-xl p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
               Lịch Tập Thử
             </p>
             <p className="text-3xl font-black text-[#111310]">{stats.trials}</p>
@@ -166,7 +166,7 @@ export default function LeadsPage() {
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-xl p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
               Đã Chuyển Đổi
             </p>
             <p className="text-3xl font-black text-[#111310]">{stats.converted}</p>
@@ -203,17 +203,18 @@ export default function LeadsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Tìm khách tiềm năng theo tên, email hoặc số điện thoại"
               placeholder="Tìm theo tên, email, số điện thoại..."
-              className="w-full border border-[#DADCD3] rounded-lg pl-9 pr-3.5 py-2 text-xs text-[#111310] placeholder:text-[#8A8E85] focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+              className="w-full border border-[#DADCD3] rounded-lg pl-9 pr-3.5 py-2 text-xs text-[#111310] placeholder:text-[#6B6F66] focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
             />
-            <span className="absolute left-3 top-2.5 text-[#8A8E85] text-xs">🔍</span>
+            <span className="absolute left-3 top-2.5 text-[#6B6F66] text-xs">🔍</span>
           </div>
         </div>
 
         {/* Bảng danh sách Lead */}
         <div className="bg-white border border-[#DADCD3] rounded-xl overflow-hidden shadow-sm">
           {/* Tiêu đề cột */}
-          <div className="grid grid-cols-[2fr_1fr_1fr_1.3fr_1.2fr_1fr_0.8fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A8E85]">
+          <div className="grid grid-cols-[2fr_1fr_1fr_1.3fr_1.2fr_1fr_0.8fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66]">
             <span>Khách Hàng & Liên Hệ</span>
             <span>Nguồn</span>
             <span>Trạng Thái</span>
@@ -256,7 +257,7 @@ export default function LeadsPage() {
                         >
                           {fullName}
                         </Link>
-                        <p className="text-[11px] text-[#8A8E85] truncate">{lead.email}</p>
+                        <p className="text-[11px] text-[#6B6F66] truncate">{lead.email}</p>
                         <p className="text-[10px] text-[#5E625A] truncate">{lead.phone}</p>
                       </div>
                     </div>
@@ -279,7 +280,7 @@ export default function LeadsPage() {
                     <div>
                       {getScoreBadge(lead.opportunityScore)}
                       {lead.scoreReason && (
-                        <p className="text-[10px] text-[#8A8E85] mt-1 truncate max-w-[170px]" title={lead.scoreReason}>
+                        <p className="text-[10px] text-[#6B6F66] mt-1 truncate max-w-[170px]" title={lead.scoreReason}>
                           {lead.scoreReason}
                         </p>
                       )}
@@ -288,7 +289,7 @@ export default function LeadsPage() {
                     {/* Gói & Ghi chú */}
                     <div className="min-w-0 pr-2">
                       <span className="text-xs font-semibold text-[#111310] block">{lead.interest || 'Chung'}</span>
-                      <p className="text-[11px] text-[#8A8E85] truncate" title={lead.notes}>
+                      <p className="text-[11px] text-[#6B6F66] truncate" title={lead.notes}>
                         {lead.notes || 'Chưa có ghi chú'}
                       </p>
                     </div>

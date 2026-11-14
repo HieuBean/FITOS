@@ -115,22 +115,22 @@ export default function TrainerPage() {
         {/* KPI Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white border border-[#DADCD3] rounded-xl p-4">
-            <p className="text-[11px] font-semibold uppercase text-[#8A8E85]">Hôm nay</p>
+            <p className="text-[11px] font-semibold uppercase text-[#6B6F66]">Hôm nay</p>
             <p className="text-2xl font-bold text-[#111310] mt-1">5 Ca dạy</p>
             <p className="text-xs text-[#526B00] mt-0.5">3 Lớp nhóm · 2 Ca PT</p>
           </div>
           <div className="bg-white border border-[#DADCD3] rounded-xl p-4">
-            <p className="text-[11px] font-semibold uppercase text-[#8A8E85]">Học viên phụ trách</p>
+            <p className="text-[11px] font-semibold uppercase text-[#6B6F66]">Học viên phụ trách</p>
             <p className="text-2xl font-bold text-[#111310] mt-1">{clients.length} Hội viên</p>
             <p className="text-xs text-[#5E625A] mt-0.5">Tất cả đang hoạt động</p>
           </div>
           <div className="bg-white border border-[#DADCD3] rounded-xl p-4">
-            <p className="text-[11px] font-semibold uppercase text-[#8A8E85]">Gói sắp hết buổi</p>
+            <p className="text-[11px] font-semibold uppercase text-[#6B6F66]">Gói sắp hết buổi</p>
             <p className="text-2xl font-bold text-[#B02A37] mt-1">2 Học viên</p>
             <p className="text-xs text-[#B02A37] mt-0.5">&le; 3 buổi còn lại</p>
           </div>
           <div className="bg-white border border-[#DADCD3] rounded-xl p-4">
-            <p className="text-[11px] font-semibold uppercase text-[#8A8E85]">Tỷ lệ đi tập tuần</p>
+            <p className="text-[11px] font-semibold uppercase text-[#6B6F66]">Tỷ lệ đi tập tuần</p>
             <p className="text-2xl font-bold text-[#526B00] mt-1">94%</p>
             <p className="text-xs text-[#526B00] mt-0.5">+4% so với tuần trước</p>
           </div>
@@ -161,7 +161,7 @@ export default function TrainerPage() {
         {/* Today's timeline */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#6B6F66]">
               Lịch Dạy &amp; Ca PT Hôm Nay
             </h2>
             <span className="text-xs text-[#5E625A]">Thứ Ba, 15 Tháng 7, 2026</span>
@@ -216,7 +216,7 @@ export default function TrainerPage() {
         {/* Clients list & PT Management */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#6B6F66]">
               Danh Sách Học Viên PT ({clients.length})
             </h2>
             <Link href="/dashboard/workout-builder" className="text-xs text-[#526B00] font-semibold hover:underline">
@@ -226,8 +226,8 @@ export default function TrainerPage() {
 
           <div className="bg-white border border-[#DADCD3] rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-[#FAF9F5] border-b border-[#DADCD3] text-xs font-semibold text-[#8A8E85] uppercase tracking-wider">
+              <table className="w-full min-w-[560px] text-left text-sm">
+                <thead className="bg-[#FAF9F5] border-b border-[#DADCD3] text-xs font-semibold text-[#6B6F66] uppercase tracking-wider">
                   <tr>
                     <th className="px-6 py-3.5">Học viên</th>
                     <th className="px-6 py-3.5">Lịch hẹn tiếp theo</th>

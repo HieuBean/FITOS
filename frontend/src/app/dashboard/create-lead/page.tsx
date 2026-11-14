@@ -125,70 +125,80 @@ export default function CreateLeadPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#8A8E85] mb-1.5">
+                  <label htmlFor="lastName" className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6F66] mb-1.5">
                     Họ & tên đệm <span className="text-red-500">*</span>
                   </label>
                   <input
+                    id="lastName"
+                    name="lastName"
                     type="text"
                     required
+                    autoComplete="family-name"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Nguyễn Thị"
-                    className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+                    className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#6B6F66] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#8A8E85] mb-1.5">
+                  <label htmlFor="firstName" className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6F66] mb-1.5">
                     Tên chính <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="firstName"
                     name="firstName"
                     type="text"
+                    autoComplete="given-name"
                     required
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Phương"
-                    className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+                    className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#6B6F66] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#8A8E85] mb-1.5">
+                  <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6F66] mb-1.5">
                     Địa chỉ Email
                   </label>
                   <input
                     id="email"
                     name="email"
                     type="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="phuong.nguyen@example.com"
-                    className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+                    className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#6B6F66] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#8A8E85] mb-1.5">
+                  <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6F66] mb-1.5">
                     Số điện thoại
                   </label>
                   <input
+                    id="phone"
+                    name="phone"
                     type="tel"
+                    autoComplete="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0908 123 456"
-                    className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
+                    className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#6B6F66] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#8A8E85] mb-1.5">
+                  <label htmlFor="source" className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6F66] mb-1.5">
                     Nguồn tiếp cận
                   </label>
                   <select
+                    id="source"
+                    name="source"
                     value={source}
                     onChange={(e) => setSource(e.target.value)}
                     className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
@@ -203,10 +213,12 @@ export default function CreateLeadPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#8A8E85] mb-1.5">
+                  <label htmlFor="interest" className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6F66] mb-1.5">
                     Gói tập quan tâm
                   </label>
                   <select
+                    id="interest"
+                    name="interest"
                     value={interest}
                     onChange={(e) => setInterest(e.target.value)}
                     className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all"
@@ -219,15 +231,17 @@ export default function CreateLeadPage() {
               </div>
 
               <div className="mb-2">
-                <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#8A8E85] mb-1.5">
+                <label htmlFor="notes" className="block text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6F66] mb-1.5">
                   Ghi chú tư vấn ban đầu
                 </label>
                 <textarea
+                  id="notes"
+                  name="notes"
                   rows={4}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Mục tiêu vóc dáng, khung giờ tập mong muốn, tiền sử chấn thương..."
-                  className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#8A8E85] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all resize-none"
+                  className="w-full border border-[#DADCD3] rounded-lg px-3.5 py-2.5 text-sm text-[#111310] placeholder:text-[#6B6F66] bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F] focus:border-transparent transition-all resize-none"
                 />
               </div>
             </div>

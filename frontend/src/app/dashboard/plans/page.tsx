@@ -136,7 +136,7 @@ export default function PlansPage() {
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[2fr_1fr_1fr_1.2fr_1.6fr_0.9fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A8E85]">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1.2fr_1.6fr_0.9fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66]">
               <span>Tên gói</span>
               <span>Loại</span>
               <span>Giá</span>
@@ -152,7 +152,7 @@ export default function PlansPage() {
             ) : plans.length === 0 ? (
               <div className="p-12 text-center">
                 <p className="text-sm font-bold text-[#111310]">Chưa có gói dịch vụ</p>
-                <p className="text-xs text-[#8A8E85] mt-1">Bấm “Tạo gói mới” để thêm gói đầu tiên.</p>
+                <p className="text-xs text-[#6B6F66] mt-1">Bấm “Tạo gói mới” để thêm gói đầu tiên.</p>
               </div>
             ) : (
               <div className="divide-y divide-[#DADCD3]">
@@ -163,7 +163,7 @@ export default function PlansPage() {
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-[#111310] truncate">{plan.name}</p>
-                      <p className="text-[11px] text-[#8A8E85] truncate">{plan.description || '—'}</p>
+                      <p className="text-[11px] text-[#6B6F66] truncate">{plan.description || '—'}</p>
                     </div>
                     <span className="text-xs font-semibold text-[#5E625A]">{plan.planType}</span>
                     <span className="text-sm font-bold text-[#111310]">{formatCurrency(plan.price)}</span>
@@ -181,7 +181,7 @@ export default function PlansPage() {
                         </span>
                       ))}
                       {plan.features.length > 2 && (
-                        <span className="text-[10px] text-[#8A8E85]">+{plan.features.length - 2}</span>
+                        <span className="text-[10px] text-[#6B6F66]">+{plan.features.length - 2}</span>
                       )}
                     </div>
                     <div className="text-right">
@@ -315,7 +315,7 @@ export default function PlansPage() {
 function StatCard({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
     <div className="bg-white border border-[#DADCD3] rounded-xl p-5 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">{label}</p>
       <p className="text-3xl font-black text-[#111310]">{value}</p>
       <p className="text-xs text-[#5E625A] mt-1">{hint}</p>
     </div>
@@ -325,7 +325,7 @@ function StatCard({ label, value, hint }: { label: string; value: string; hint: 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66]">{label}</span>
       <div className="mt-1">{children}</div>
     </label>
   );

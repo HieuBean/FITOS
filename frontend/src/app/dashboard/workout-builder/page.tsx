@@ -112,11 +112,11 @@ export default function WorkoutBuilderPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Link href="/dashboard/trainer" className="text-xs text-[#526B00] font-semibold hover:underline">
+              <Link href="/dashboard/trainer" className="inline-flex items-center min-h-[44px] px-2 text-xs text-[#526B00] font-semibold hover:underline">
                 &larr; Quay lại Trainer Hub
               </Link>
               <span className="text-gray-300">/</span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8A8E85]">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#5E625A]">
                 BUILDER
               </span>
             </div>
@@ -138,13 +138,14 @@ export default function WorkoutBuilderPage() {
           <div className="lg:col-span-8 space-y-6">
             {/* Plan Info Card */}
             <div className="bg-white border border-[#DADCD3] rounded-2xl p-6 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-4">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#5E625A] mb-4">
                 Thông tin chung kế hoạch
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#5E625A] mb-1">Tên giáo án</label>
+                  <label htmlFor="planName" className="block text-xs font-semibold text-[#5E625A] mb-1">Tên giáo án</label>
                   <input
+                    id="planName"
                     type="text"
                     value={planName}
                     onChange={(e) => setPlanName(e.target.value)}
@@ -152,8 +153,9 @@ export default function WorkoutBuilderPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#5E625A] mb-1">Mục tiêu thể lực</label>
+                  <label htmlFor="goal" className="block text-xs font-semibold text-[#5E625A] mb-1">Mục tiêu thể lực</label>
                   <select
+                    id="goal"
                     value={goal}
                     onChange={(e) => setGoal(e.target.value)}
                     className="w-full border border-[#DADCD3] rounded-xl px-3.5 py-2 text-sm text-[#111310] font-semibold focus:outline-none focus:ring-2 focus:ring-[#526B00] bg-white"
@@ -165,8 +167,9 @@ export default function WorkoutBuilderPage() {
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-[#5E625A] mb-1">Mô tả định hướng</label>
+                  <label htmlFor="description" className="block text-xs font-semibold text-[#5E625A] mb-1">Mô tả định hướng</label>
                   <input
+                    id="description"
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -179,10 +182,10 @@ export default function WorkoutBuilderPage() {
             {/* Week Days Tabs */}
             <div className="bg-white border border-[#DADCD3] rounded-2xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#5E625A]">
                   Phân bổ lịch tập trong tuần (7 Ngày)
                 </h2>
-                <span className="text-xs text-[#526B00] font-semibold bg-[#D7FF3F]/40 px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center min-h-[44px] px-2 text-xs text-[#526B00] font-semibold bg-[#D7FF3F]/40 px-2.5 py-0.5 rounded-full">
                   Tổng {planExercises.length} bài tập
                 </span>
               </div>
@@ -204,7 +207,7 @@ export default function WorkoutBuilderPage() {
                     >
                       <span>{name.split(' ')[0]} {name.split(' ')[1]}</span>
                       <span className={`text-[10px] mt-1 px-1.5 py-0.2 rounded-full ${
-                        count > 0 ? (isActive ? 'bg-[#D7FF3F] text-[#111310]' : 'bg-[#DADCD3] text-[#111310]') : 'text-gray-400'
+                        count > 0 ? (isActive ? 'bg-[#D7FF3F] text-[#111310]' : 'bg-[#DADCD3] text-[#111310]') : 'text-gray-600'
                       }`}>
                         {count > 0 ? `${count} bài` : 'Nghỉ'}
                       </span>
@@ -219,7 +222,7 @@ export default function WorkoutBuilderPage() {
                   <h3 className="text-sm font-bold text-[#111310]">
                     Các bài tập cho: {dayLabels.find((d) => d.day === activeDay)?.name}
                   </h3>
-                  <span className="text-xs text-[#5E625A]">
+                  <span className="inline-flex items-center min-h-[44px] px-2 text-xs text-[#5E625A]">
                     {currentDayExercises.length === 0 ? 'Hôm nay là ngày nghỉ (Rest Day)' : `${currentDayExercises.length} bài tập`}
                   </span>
                 </div>
@@ -228,7 +231,7 @@ export default function WorkoutBuilderPage() {
                   <div className="text-center py-12 border-2 border-dashed border-[#DADCD3] rounded-xl bg-[#FAF9F5]">
                     <p className="text-2xl mb-1">🛌</p>
                     <p className="text-sm font-bold text-[#111310]">Ngày phục hồi thể lực hoặc chưa gán bài tập</p>
-                    <p className="text-xs text-[#5E625A] mt-1">
+                    <p className="inline-flex items-center min-h-[44px] px-2 text-xs text-[#5E625A] mt-1">
                       Chọn bài tập từ thanh danh mục bên phải để thêm vào ngày này.
                     </p>
                   </div>
@@ -244,7 +247,7 @@ export default function WorkoutBuilderPage() {
                         </span>
                         <div>
                           <p className="text-sm font-bold text-[#111310]">{ex.exerciseName}</p>
-                          <span className="text-[10px] font-semibold bg-[#DADCD3] text-[#5E625A] px-2 py-0.5 rounded-full uppercase">
+                          <span className="text-[10px] font-semibold bg-[#DADCD3] text-[#3F433C] px-2 py-0.5 rounded-full uppercase">
                             {ex.muscleGroup}
                           </span>
                         </div>
@@ -252,8 +255,9 @@ export default function WorkoutBuilderPage() {
 
                       <div className="flex items-center gap-3 flex-wrap">
                         <div className="flex items-center gap-1.5">
-                          <label className="text-xs text-[#5E625A]">Sets:</label>
+                          <label className="inline-flex items-center min-h-[44px] px-2 text-xs text-[#5E625A]">Sets:</label>
                           <input
+                            aria-label="Số hiệp của bài tập"
                             type="number"
                             min="1"
                             value={ex.sets}
@@ -262,8 +266,9 @@ export default function WorkoutBuilderPage() {
                           />
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <label className="text-xs text-[#5E625A]">Reps:</label>
+                          <label className="inline-flex items-center min-h-[44px] px-2 text-xs text-[#5E625A]">Reps:</label>
                           <input
+                            aria-label="Số lần lặp mỗi hiệp"
                             type="number"
                             min="1"
                             value={ex.reps}
@@ -272,8 +277,9 @@ export default function WorkoutBuilderPage() {
                           />
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <label className="text-xs text-[#5E625A]">Tạ (kg):</label>
+                          <label className="inline-flex items-center min-h-[44px] px-2 text-xs text-[#5E625A]">Tạ (kg):</label>
                           <input
+                            aria-label="Mức tạ gợi ý (kg)"
                             type="number"
                             min="0"
                             value={ex.weightSuggest || 0}
@@ -282,8 +288,9 @@ export default function WorkoutBuilderPage() {
                           />
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <label className="text-xs text-[#5E625A]">Nghỉ (s):</label>
+                          <label className="inline-flex items-center min-h-[44px] px-2 text-xs text-[#5E625A]">Nghỉ (s):</label>
                           <input
+                            aria-label="Thời gian nghỉ giữa hiệp (giây)"
                             type="number"
                             min="0"
                             step="15"
@@ -294,7 +301,7 @@ export default function WorkoutBuilderPage() {
                         </div>
                         <button
                           onClick={() => removeExercise(ex.id)}
-                          className="text-red-500 hover:text-red-700 p-1 text-sm ml-2"
+                          className="text-red-500 hover:text-red-700 h-11 w-11 inline-flex items-center justify-center text-base ml-2"
                           title="Xóa bài tập này"
                         >
                           ✕
@@ -311,7 +318,7 @@ export default function WorkoutBuilderPage() {
           <div className="lg:col-span-4">
             <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm sticky top-6">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#5E625A]">
                   Thư Viện Bài Tập
                 </h2>
                 <span className="text-[11px] text-[#526B00] font-bold">
@@ -322,6 +329,7 @@ export default function WorkoutBuilderPage() {
               {/* Search */}
               <input
                 type="text"
+                aria-label="Tìm bài tập theo tên hoặc nhóm cơ"
                 placeholder="Tìm tên bài, nhóm cơ..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -353,14 +361,14 @@ export default function WorkoutBuilderPage() {
                     className="p-3 border border-[#DADCD3] rounded-xl hover:border-[#526B00] hover:bg-[#FAF9F5] transition-all flex items-center justify-between group"
                   >
                     <div>
-                      <p className="text-xs font-bold text-[#111310]">{ex.name}</p>
+                      <p className="inline-flex items-center min-h-[44px] px-2 text-xs font-bold text-[#111310]">{ex.name}</p>
                       <p className="text-[10px] text-[#5E625A] mt-0.5 line-clamp-1">{ex.description}</p>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="text-[9px] font-semibold bg-[#D7FF3F]/60 text-[#111310] px-1.5 py-0.2 rounded">
                           {ex.muscleGroup}
                         </span>
                         {ex.equipment && (
-                          <span className="text-[9px] text-[#8A8E85]">
+                          <span className="text-[9px] text-[#5E625A]">
                             • {ex.equipment}
                           </span>
                         )}

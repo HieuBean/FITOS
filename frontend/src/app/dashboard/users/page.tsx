@@ -197,7 +197,7 @@ export default function UsersPage() {
               { label: 'Hội viên', value: stats.members, hint: 'Dùng cổng hội viên' },
             ].map((item) => (
               <div key={item.label} className="bg-white border border-[#DADCD3] rounded-xl p-5 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
                   {item.label}
                 </p>
                 <p className="text-3xl font-black text-[#111310]">{item.value}</p>
@@ -229,13 +229,14 @@ export default function UsersPage() {
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
+              aria-label="Tìm người dùng theo tên, email hoặc số điện thoại"
               placeholder="Tìm theo tên, email, số điện thoại…"
-              className="min-w-[260px] border border-[#DADCD3] rounded-lg px-3.5 py-2 text-xs text-[#111310] placeholder:text-[#8A8E85] focus:outline-none focus:ring-2 focus:ring-[#D7FF3F]"
+              className="min-w-[260px] border border-[#DADCD3] rounded-lg px-3.5 py-2 text-xs text-[#111310] placeholder:text-[#6B6F66] focus:outline-none focus:ring-2 focus:ring-[#D7FF3F]"
             />
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[2fr_1.3fr_1.2fr_1fr_1.6fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A8E85]">
+            <div className="grid grid-cols-[2fr_1.3fr_1.2fr_1fr_1.6fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66]">
               <span>Người dùng</span>
               <span>Vai trò</span>
               <span>Ngày tạo</span>
@@ -250,7 +251,7 @@ export default function UsersPage() {
             ) : users.length === 0 ? (
               <div className="p-12 text-center">
                 <p className="text-sm font-bold text-[#111310]">Không tìm thấy tài khoản nào</p>
-                <p className="text-xs text-[#8A8E85] mt-1">Thử đổi bộ lọc hoặc từ khoá tìm kiếm.</p>
+                <p className="text-xs text-[#6B6F66] mt-1">Thử đổi bộ lọc hoặc từ khoá tìm kiếm.</p>
               </div>
             ) : (
               <div className="divide-y divide-[#DADCD3]">
@@ -267,7 +268,7 @@ export default function UsersPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-[#111310] truncate">{user.fullName}</p>
-                          <p className="text-[11px] text-[#8A8E85] truncate">{user.email}</p>
+                          <p className="text-[11px] text-[#6B6F66] truncate">{user.email}</p>
                           {user.phone && <p className="text-[10px] text-[#5E625A]">{user.phone}</p>}
                         </div>
                       </div>
@@ -337,7 +338,7 @@ export default function UsersPage() {
             <form onSubmit={submit} className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
               <div className="px-6 py-4 border-b border-[#DADCD3]">
                 <h2 className="text-base font-bold text-[#111310]">Tạo tài khoản mới</h2>
-                <p className="text-xs text-[#8A8E85] mt-0.5">Tài khoản được gán vai trò trong studio hiện tại</p>
+                <p className="text-xs text-[#6B6F66] mt-0.5">Tài khoản được gán vai trò trong studio hiện tại</p>
               </div>
               <div className="px-6 py-5 space-y-3">
                 <Field label="Họ và tên">
@@ -415,7 +416,7 @@ export default function UsersPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85]">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66]">{label}</span>
       <div className="mt-1">{children}</div>
     </label>
   );

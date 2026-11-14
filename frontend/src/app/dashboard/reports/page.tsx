@@ -77,6 +77,7 @@ export default function ReportsPage() {
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
+              aria-label="Chọn khoảng thời gian báo cáo"
               className="border border-[#DADCD3] bg-white rounded-xl px-3 py-2 text-xs font-semibold text-[#111310] focus:outline-none focus:ring-2 focus:ring-[#526B00]"
             >
               <option value="WEEK">Tuần này</option>
@@ -100,7 +101,7 @@ export default function ReportsPage() {
             className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all ${
               activeTab === 'SALES'
                 ? 'border-[#111310] text-[#111310]'
-                : 'border-transparent text-[#8A8E85] hover:text-[#111310]'
+                : 'border-transparent text-[#6B6F66] hover:text-[#111310]'
             }`}
           >
             💰 Doanh Thu &amp; Gói Dịch Vụ
@@ -110,7 +111,7 @@ export default function ReportsPage() {
             className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all ${
               activeTab === 'MEMBERS'
                 ? 'border-[#111310] text-[#111310]'
-                : 'border-transparent text-[#8A8E85] hover:text-[#111310]'
+                : 'border-transparent text-[#6B6F66] hover:text-[#111310]'
             }`}
           >
             👥 Hội Viên &amp; Tỷ Lệ Giữ Chân
@@ -120,7 +121,7 @@ export default function ReportsPage() {
             className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all ${
               activeTab === 'CLASSES'
                 ? 'border-[#111310] text-[#111310]'
-                : 'border-transparent text-[#8A8E85] hover:text-[#111310]'
+                : 'border-transparent text-[#6B6F66] hover:text-[#111310]'
             }`}
           >
             🧘 Lớp Học &amp; Tỷ Lệ Lấp Đầy (Occupancy)
@@ -134,17 +135,17 @@ export default function ReportsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase text-[#8A8E85]">Tổng doanh thu tháng</p>
+                <p className="text-[11px] font-semibold uppercase text-[#6B6F66]">Tổng doanh thu tháng</p>
                 <p className="text-3xl font-black text-[#111310] mt-1">1,053,000,000 đ</p>
                 <p className="text-xs text-[#526B00] mt-1 font-semibold">+14.5% so với tháng trước</p>
               </div>
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase text-[#8A8E85]">Hợp đồng mới ký kết</p>
+                <p className="text-[11px] font-semibold uppercase text-[#6B6F66]">Hợp đồng mới ký kết</p>
                 <p className="text-3xl font-black text-[#111310] mt-1">219 gói</p>
                 <p className="text-xs text-[#526B00] mt-1 font-semibold">Tỷ lệ chốt sales: 38%</p>
               </div>
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase text-[#8A8E85]">Giá trị trung bình đơn (AOV)</p>
+                <p className="text-[11px] font-semibold uppercase text-[#6B6F66]">Giá trị trung bình đơn (AOV)</p>
                 <p className="text-3xl font-black text-[#111310] mt-1">4,808,000 đ</p>
                 <p className="text-xs text-[#5E625A] mt-1">Gói PT đóng góp 34% tổng tiền</p>
               </div>
@@ -155,8 +156,8 @@ export default function ReportsPage() {
                 Cơ Cấu Doanh Thu Theo Từng Gói Tập
               </h2>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-[#FAF9F5] border-b border-[#DADCD3] text-xs font-semibold text-[#8A8E85] uppercase">
+                <table className="w-full min-w-[560px] text-left text-sm">
+                  <thead className="bg-[#FAF9F5] border-b border-[#DADCD3] text-xs font-semibold text-[#6B6F66] uppercase">
                     <tr>
                       <th className="px-6 py-3.5">Tên gói dịch vụ</th>
                       <th className="px-6 py-3.5">Số lượng bán</th>
@@ -190,7 +191,7 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {memberStats.map((st, i) => (
                 <div key={i} className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
-                  <p className="text-[11px] font-semibold uppercase text-[#8A8E85]">{st.metric}</p>
+                  <p className="text-[11px] font-semibold uppercase text-[#6B6F66]">{st.metric}</p>
                   <p className="text-2xl font-black text-[#111310] mt-1">{st.value}</p>
                   <p className="text-xs text-[#526B00] mt-1 font-medium">{st.change}</p>
                 </div>
@@ -255,8 +256,8 @@ export default function ReportsPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-[#FAF9F5] border-b border-[#DADCD3] text-xs font-semibold text-[#8A8E85] uppercase">
+                <table className="w-full min-w-[560px] text-left text-sm">
+                  <thead className="bg-[#FAF9F5] border-b border-[#DADCD3] text-xs font-semibold text-[#6B6F66] uppercase">
                     <tr>
                       <th className="px-6 py-3.5">Lớp tập</th>
                       <th className="px-6 py-3.5">Huấn luyện viên</th>

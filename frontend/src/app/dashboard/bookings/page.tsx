@@ -147,7 +147,7 @@ export default function BookingsPage() {
               { label: 'Đã huỷ', value: stats.cancelled, hint: 'Đã giải phóng chỗ' },
             ].map((item) => (
               <div key={item.label} className="bg-white border border-[#DADCD3] rounded-xl p-5 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A8E85] mb-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6F66] mb-1.5">
                   {item.label}
                 </p>
                 <p className="text-3xl font-black text-[#111310]">{item.value}</p>
@@ -174,7 +174,7 @@ export default function BookingsPage() {
           </div>
 
           <div className="bg-white border border-[#DADCD3] rounded-xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[1.6fr_1.6fr_1.2fr_1fr_1.4fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A8E85]">
+            <div className="grid grid-cols-[1.6fr_1.6fr_1.2fr_1fr_1.4fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66]">
               <span>Hội viên</span>
               <span>Lớp &amp; khung giờ</span>
               <span>Ngày tập</span>
@@ -189,7 +189,7 @@ export default function BookingsPage() {
             ) : bookings.length === 0 ? (
               <div className="p-12 text-center">
                 <p className="text-sm font-bold text-[#111310]">Chưa có lượt đặt chỗ nào</p>
-                <p className="text-xs text-[#8A8E85] mt-1">Hội viên đặt lớp sẽ xuất hiện ở đây.</p>
+                <p className="text-xs text-[#6B6F66] mt-1">Hội viên đặt lớp sẽ xuất hiện ở đây.</p>
               </div>
             ) : (
               <div className="divide-y divide-[#DADCD3]">
@@ -200,13 +200,13 @@ export default function BookingsPage() {
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-[#111310] truncate">{booking.customerName}</p>
-                      <p className="text-[11px] text-[#8A8E85]">
+                      <p className="text-[11px] text-[#6B6F66]">
                         {booking.checkedIn ? 'Đã điểm danh' : 'Chưa điểm danh'}
                       </p>
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm text-[#111310] truncate">{booking.className}</p>
-                      <p className="text-[11px] text-[#8A8E85]">{booking.startTime?.slice(0, 5)}</p>
+                      <p className="text-[11px] text-[#6B6F66]">{booking.startTime?.slice(0, 5)}</p>
                     </div>
                     <div className="flex flex-col gap-1">
                       <span className="text-xs text-[#5E625A]">{formatDate(booking.sessionDate)}</span>
