@@ -1,17 +1,16 @@
 package com.fitos.common.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Các bean bảo mật dùng chung.
+ *
+ * <p>Lưu ý: {@code PasswordEncoder} đã được khai báo duy nhất trong
+ * {@link com.fitos.config.SecurityConfig}. Trước đây lớp này khai báo thêm một
+ * bean cùng tên khiến Spring Boot dừng khởi động với
+ * {@code BeanDefinitionOverrideException} (định nghĩa bean trùng, không cho ghi đè).
+ * Không khai báo lại bean đó ở đây nữa.
+ */
 @Configuration
 public class SecurityBeanConfig {
-
-    @Bean
-    @ConditionalOnMissingBean(PasswordEncoder.class)
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }
