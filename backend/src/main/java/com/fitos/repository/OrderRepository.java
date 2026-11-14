@@ -20,6 +20,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findByOrderReference(String orderReference);
 
+    List<Order> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+
+    List<Order> findTop20ByCustomerIdOrderByCreatedAtDesc(Long customerId);
+
     Page<Order> findByStudioIdOrderByCreatedAtDesc(Long studioId, Pageable pageable);
 
     Page<Order> findByStudioIdAndStatusOrderByCreatedAtDesc(Long studioId, String status, Pageable pageable);
@@ -28,7 +32,24 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     boolean existsByOrderReference(String orderReference);
 
+    Optional<Order> findByStudioIdAndClientRequestId(Long studioId, String clientRequestId);
+
+    Page<Order> findByStudioIdAndOrderTypeOrderByCreatedAtDesc(Long studioId, String orderType, Pageable pageable);
+
+    Page<Order> findByStudioIdAndOrderTypeAndStatusOrderByCreatedAtDesc(
+            Long studioId, String orderType, String status, Pageable pageable);
+
+    @Query("""
+           SELECT o FROM Order o
+           WHERE o.studioId = :studioId AND o.orderType IN ('RETAIL','RETAIL_RETURN')
+             AND o.createdAt >= :from AND o.createdAt < :to
+           ORDER BY o.createdAt DESC
+           """)
+    List<Order> findRetailBetween(@Param("studioId") Long studioId,
+                                  @Param("from") Instant from,
+                                  @Param("to") Instant to);
+
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o " +
-           "WHERE o.studioId = :studioId AND o.status = 'PAID' AND o.createdAt >= :from")
+            "WHERE o.studioId = :studioId AND o.status = 'PAID' AND o.createdAt >= :from")
     BigDecimal sumPaidSince(@Param("studioId") Long studioId, @Param("from") Instant from);
 }
