@@ -119,3 +119,105 @@ svg {
 .stage-badge {
   @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
 }
+
+/* ---------------------------------------------------------------------------
+ * Touch target tối thiểu 44px trên thiết bị cảm ứng / màn hình nhỏ.
+ * Nhiều nút phụ (chip lọc, "Huỷ", "Đặt chỗ"…) chỉ cao 24–28px, dưới ngưỡng
+ * khuyến nghị nên rất dễ bấm sai. Chỉ áp dụng dưới 1024px để bố cục desktop
+ * vẫn gọn, không bị giãn.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 1023px) {
+  button,
+  select,
+  input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Liên kết điều hướng dạng danh sách cũng cần vùng chạm đủ lớn. */
+  nav a,
+  footer a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Vòng focus rõ ràng cho người dùng bàn phím (WCAG 2.4.7). */
+:where(a, button, select, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #526B00;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Tôn trọng lựa chọn giảm chuyển động của người dùng. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   IN HOÁ ĐƠN POS — chỉ in nội dung #receipt, ẩn toàn bộ giao diện xung quanh.
+   Khổ 80mm cho máy in nhiệt, hoặc A5 cho máy in thường.
+   ========================================================================== */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 4mm;
+  }
+
+  /* Ẩn mọi thứ, chỉ hiện vùng hoá đơn */
+  body * {
+    visibility: hidden !important;
+  }
+  #receipt,
+  #receipt * {
+    visibility: visible !important;
+  }
+
+  #receipt {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 72mm;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  /* Đảm bảo hoá đơn không bị cắt khi dài hơn 1 trang */
+  #receipt table {
+    page-break-inside: auto;
+  }
+  #receipt tr {
+    page-break-inside: avoid;
+  }
+
+  /* Nền trắng, bỏ bóng và bo góc khi in */
+  #receipt,
+  #receipt div,
+  #receipt table,
+  #receipt th,
+  #receipt td {
+    background: #fff !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  #receipt * {
+    color: #000 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
