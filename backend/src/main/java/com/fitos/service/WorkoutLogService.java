@@ -5,6 +5,7 @@ import com.fitos.exception.BusinessException;
 import com.fitos.exception.ResourceNotFoundException;
 import com.fitos.model.*;
 import com.fitos.repository.*;
+import com.fitos.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,15 +28,21 @@ public class WorkoutLogService {
     private final WorkoutPlanRepository planRepository;
     private final CustomerRepository customerRepository;
     private final ExerciseRepository exerciseRepository;
+    private final CurrentMemberService currentMember;
 
+    /**
+     * Bắt đầu buổi tập cho một khách hàng đã được xác thực từ danh tính đăng nhập
+     * (không nhận {@code customerId} từ client).
+     */
     @Transactional
-    public WorkoutDto.SessionResponse startSession(WorkoutDto.StartSessionRequest req) {
-        Customer customer = customerRepository.findById(req.getCustomerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + req.getCustomerId()));
-
+    public WorkoutDto.SessionResponse startSession(Customer customer, WorkoutDto.StartSessionRequest req) {
         WorkoutPlan plan = null;
-        if (req.getWorkoutPlanId() != null) {
-            plan = planRepository.findById(req.getWorkoutPlanId()).orElse(null);
+        if (req != null && req.getWorkoutPlanId() != null) {
+            plan = planRepository.findById(req.getWorkoutPlanId())
+                    .filter(candidate -> candidate.getCustomer() != null
+                            && customer.getId().equals(candidate.getCustomer().getId()))
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy giáo án thuộc hội viên này: " + req.getWorkoutPlanId()));
         } else {
             plan = planRepository.findActiveByCustomerId(customer.getId()).orElse(null);
         }
@@ -45,17 +52,32 @@ public class WorkoutLogService {
                 .workoutPlan(plan)
                 .startedAt(LocalDateTime.now())
                 .status("IN_PROGRESS")
-                .notes(req.getNotes())
+                .notes(req != null ? req.getNotes() : null)
                 .logs(new ArrayList<>())
                 .build();
 
         return mapToSessionResponse(sessionRepository.save(session));
     }
 
-    @Transactional
-    public WorkoutDto.SessionResponse completeSession(Long sessionId, WorkoutDto.CompleteSessionRequest req) {
+    /** Kiểm tra buổi tập có thuộc về người đang đăng nhập (hoặc người đó là nhân viên). */
+    private WorkoutSession requireOwnedSession(Long sessionId, UserPrincipal principal) {
         WorkoutSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Workout session not found: " + sessionId));
+        if (currentMember.isStaff(principal)) {
+            return session;
+        }
+        Customer owner = currentMember.require(principal);
+        if (session.getCustomer() == null || !owner.getId().equals(session.getCustomer().getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Bạn không có quyền truy cập buổi tập này");
+        }
+        return session;
+    }
+
+    @Transactional
+    public WorkoutDto.SessionResponse completeSession(Long sessionId, WorkoutDto.CompleteSessionRequest req,
+                                                      UserPrincipal principal) {
+        WorkoutSession session = requireOwnedSession(sessionId, principal);
 
         if ("COMPLETED".equalsIgnoreCase(session.getStatus())) {
             return mapToSessionResponse(session);
@@ -89,19 +111,32 @@ public class WorkoutLogService {
     }
 
     @Transactional(readOnly = true)
-    public WorkoutDto.SessionResponse getSessionById(Long sessionId) {
-        WorkoutSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Workout session not found: " + sessionId));
-        return mapToSessionResponse(session);
+    public WorkoutDto.SessionResponse getSessionById(Long sessionId, UserPrincipal principal) {
+        return mapToSessionResponse(requireOwnedSession(sessionId, principal));
     }
 
     @Transactional
-    public WorkoutDto.LogResponse createLog(WorkoutDto.CreateLogRequest req) {
-        WorkoutSession session = sessionRepository.findById(req.getWorkoutSessionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Workout Session not found: " + req.getWorkoutSessionId()));
+    public WorkoutDto.LogResponse createLog(WorkoutDto.CreateLogRequest req, UserPrincipal principal) {
+        WorkoutSession session = requireOwnedSession(req.getWorkoutSessionId(), principal);
 
         Exercise exercise = exerciseRepository.findById(req.getExerciseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Exercise not found: " + req.getExerciseId()));
+
+        // Chặn ghi set trùng số hiệu trong cùng buổi (sửa tay ở client rất dễ sinh trùng).
+        if (req.getSetNumber() == null || req.getSetNumber() < 1) {
+            throw new com.fitos.exception.BadRequestException("Số hiệu set phải lớn hơn 0");
+        }
+        if (logRepository.existsByWorkoutSessionIdAndExerciseIdAndSetNumber(
+                session.getId(), exercise.getId(), req.getSetNumber())) {
+            throw new com.fitos.exception.BadRequestException(
+                    "Set #" + req.getSetNumber() + " của bài " + exercise.getName() + " đã được ghi trước đó");
+        }
+        if (req.getRpe() != null && (req.getRpe() < 1 || req.getRpe() > 10)) {
+            throw new com.fitos.exception.BadRequestException("RPE phải trong khoảng 1 đến 10");
+        }
+        if (req.getWeightKg() != null && req.getWeightKg().signum() < 0) {
+            throw new com.fitos.exception.BadRequestException("Mức tạ không được âm");
+        }
 
         WorkoutLog logEntry = WorkoutLog.builder()
                 .workoutSession(session)
@@ -119,7 +154,8 @@ public class WorkoutLogService {
     }
 
     @Transactional(readOnly = true)
-    public List<WorkoutDto.LogResponse> getLogsBySession(Long sessionId) {
+    public List<WorkoutDto.LogResponse> getLogsBySession(Long sessionId, UserPrincipal principal) {
+        requireOwnedSession(sessionId, principal);
         return logRepository.findByWorkoutSessionIdOrderBySetNumberAsc(sessionId).stream()
                 .map(this::mapToLogResponse)
                 .collect(Collectors.toList());
