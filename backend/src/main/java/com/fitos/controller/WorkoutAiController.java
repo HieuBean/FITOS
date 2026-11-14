@@ -29,7 +29,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
 @RequestMapping("/api/ai")
-@PreAuthorize("hasAuthority('ROLE_MEMBER')")
+@PreAuthorize("hasAnyAuthority('ROLE_MEMBER','ROLE_TRAINER','ROLE_MANAGER','ROLE_ADMIN')")
 public class WorkoutAiController {
     private final CustomerRepository customers;
     private final BodyMetricRepository metrics;
@@ -73,40 +73,61 @@ public class WorkoutAiController {
         if (input.feedbackOrPainNote() != null && input.feedbackOrPainNote().length() > 2000) {
             throw new ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Feedback is too long");
         }
-        Customer customer = customer(principal);
+        Customer customer = customerOrNull(principal);
         Map<String, Object> body = new HashMap<>();
-        List<Map<String, Object>> plans = jdbc.queryForList(
-                "SELECT id, title FROM workout_plans WHERE customer_id = ? AND studio_id = ? AND status = 'ACTIVE' " +
-                "ORDER BY start_date DESC, id DESC LIMIT 1", customer.getId(), principal.getStudioId());
-        if (!plans.isEmpty()) {
-            Map<String, Object> plan = plans.get(0);
-            body.put("current_plan_name", plan.get("title"));
-            body.put("current_exercises", jdbc.queryForList(
-                    "SELECT e.name, pe.target_sets, pe.target_reps_min, pe.target_reps_max, pe.target_weight_kg " +
-                    "FROM workout_plan_exercises pe JOIN exercises e ON e.id = pe.exercise_id " +
-                    "WHERE pe.plan_id = ? AND pe.studio_id = ? ORDER BY pe.day_of_week, pe.order_index",
-                    plan.get("id"), principal.getStudioId()));
-        } else {
+        if (customer == null) {
             body.put("current_exercises", List.of());
+        } else {
+            List<Map<String, Object>> plans = jdbc.queryForList(
+                    "SELECT id, name FROM workout_plans WHERE customer_id = ? AND studio_id = ? AND status = 'ACTIVE' " +
+                    "ORDER BY start_date DESC, id DESC LIMIT 1", customer.getId(), principal.getStudioId());
+            if (!plans.isEmpty()) {
+                Map<String, Object> plan = plans.get(0);
+                body.put("current_plan_name", plan.get("name"));
+                body.put("current_exercises", jdbc.queryForList(
+                        "SELECT e.name, pe.sets, pe.reps, pe.weight_suggest " +
+                        "FROM workout_plan_exercises pe JOIN exercises e ON e.id = pe.exercise_id " +
+                        "WHERE pe.workout_plan_id = ? AND pe.studio_id = ? ORDER BY pe.day_of_week, pe.sort_order",
+                        plan.get("id"), principal.getStudioId()));
+            } else {
+                body.put("current_exercises", List.of());
+            }
         }
         body.put("feedback_or_pain_note", input.feedbackOrPainNote());
         body.put("fitness_profile", profile(principal));
         return forward("/recommend", body);
     }
 
+    /**
+     * Hồ sơ thể lực gửi kèm câu hỏi.
+     *
+     * <p>Nhân viên (ADMIN/MANAGER/TRAINER) không có hồ sơ khách hàng nên trước đây
+     * hàm {@code customer()} ném 404 và toàn bộ trợ lý AI hỏng với các vai trò này.
+     * Nay trả hồ sơ tối thiểu (chỉ tên) thay vì lỗi — AI vẫn tư vấn được, chỉ là
+     * không có dữ liệu cân nặng/giới tính/lịch sử tập.
+     */
     private Map<String, Object> profile(UserPrincipal principal) {
-        Customer customer = customer(principal);
         Map<String, Object> profile = new HashMap<>();
         profile.put("user_id", principal.getId());
+
+        Customer customer = customerOrNull(principal);
+        if (customer == null) {
+            profile.put("full_name", principal.getFullName());
+            profile.put("recent_workouts", List.of());
+            profile.put("has_member_profile", false);
+            return profile;
+        }
+
         profile.put("full_name", customer.getFullName());
+        profile.put("has_member_profile", true);
         if (customer.getDob() != null) profile.put("age", Period.between(customer.getDob(), LocalDate.now()).getYears());
         if (customer.getGender() != null) profile.put("gender", customer.getGender());
         if (customer.getFitnessGoal() != null) profile.put("fitness_goal", customer.getFitnessGoal());
         metrics.findFirstByCustomerIdOrderByRecordedDateDesc(customer.getId()).ifPresent(metric -> profile.put("body_metrics", metricMap(metric)));
         profile.put("recent_workouts", jdbc.query(
                 "SELECT ws.session_date, e.name AS exercise_name, wl.set_number, wl.weight_kg, " +
-                "wl.reps_completed, wl.rpe FROM workout_logs wl " +
-                "JOIN workout_sessions ws ON ws.id = wl.session_id AND ws.studio_id = wl.studio_id " +
+                "wl.reps_actual, wl.rpe FROM workout_logs wl " +
+                "JOIN workout_sessions ws ON ws.id = wl.workout_session_id AND ws.studio_id = wl.studio_id " +
                 "JOIN exercises e ON e.id = wl.exercise_id " +
                 "WHERE ws.customer_id = ? AND ws.studio_id = ? " +
                 "ORDER BY ws.session_date DESC, wl.id DESC LIMIT 20",
@@ -115,14 +136,14 @@ public class WorkoutAiController {
                         "exercise_name", rs.getString("exercise_name"),
                         "set_number", rs.getInt("set_number"),
                         "weight_kg", rs.getBigDecimal("weight_kg"),
-                        "reps_completed", rs.getInt("reps_completed")),
+                        "reps_completed", rs.getInt("reps_actual")),
                 customer.getId(), principal.getStudioId()));
         return profile;
     }
 
-    private Customer customer(UserPrincipal principal) {
-        return customers.findByUserIdAndStudioId(principal.getId(), principal.getStudioId())
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Customer profile not found in studio"));
+    /** Trả về null thay vì ném 404 khi tài khoản không có hồ sơ hội viên. */
+    private Customer customerOrNull(UserPrincipal principal) {
+        return customers.findByUserIdAndStudioId(principal.getId(), principal.getStudioId()).orElse(null);
     }
 
     private Map<String, Object> metricMap(BodyMetric metric) {
