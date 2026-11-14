@@ -41,6 +41,18 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    public String getPassword() {
+        return passwordHash;
+    }
+
+    public void setPassword(String password) {
+        this.passwordHash = password;
+    }
+
+    public boolean isEnabled() {
+        return isActive != null && isActive;
+    }
+
     @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

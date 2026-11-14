@@ -67,13 +67,28 @@ public class Customer {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    // Backward-compatibility accessors for Person D services & tests
+    // Backward-compatibility accessors for Person D & Person B services & tests
     public String getName() {
         return fullName;
     }
 
     public void setName(String name) {
         this.fullName = name;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dob;
+    }
+
+    public void setDateOfBirth(LocalDate dob) {
+        this.dob = dob;
+    }
+
+    public String getNotes() {
+        return null;
+    }
+
+    public void setNotes(String notes) {
     }
 
     public Long getUserId() {

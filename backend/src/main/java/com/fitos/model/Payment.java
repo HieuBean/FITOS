@@ -54,4 +54,54 @@ public class Payment {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
+
+    public enum Method {
+        CASH, CARD, BANK_TRANSFER, VNPAY, MOMO
+    }
+
+    public enum Status {
+        PENDING, SUCCESS, FAILED
+    }
+
+    public boolean isSuccess() {
+        return "SUCCESS".equalsIgnoreCase(status);
+    }
+
+    public void markSuccess(Instant paidAt) {
+        this.status = "SUCCESS";
+        this.paidAt = paidAt;
+    }
+
+    public void markSuccess(java.time.OffsetDateTime paidAt) {
+        this.status = "SUCCESS";
+        this.paidAt = paidAt != null ? paidAt.toInstant() : Instant.now();
+    }
+
+    public void setPaymentMethod(String method) {
+        this.paymentMethod = method;
+    }
+
+    public void setPaymentMethod(Method method) {
+        this.paymentMethod = method != null ? method.name() : null;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status != null ? status.name() : null;
+    }
+
+    public Status getStatusEnum() {
+        try {
+            return status != null ? Status.valueOf(status) : Status.PENDING;
+        } catch (Exception e) {
+            return Status.PENDING;
+        }
+    }
+
+    public void markFailed(String reason) {
+        this.status = "FAILED";
+    }
 }

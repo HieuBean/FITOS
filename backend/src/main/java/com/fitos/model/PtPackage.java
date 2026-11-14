@@ -54,4 +54,50 @@ public class PtPackage {
     @Column(name = "updated_at")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public enum Status {
+        ACTIVE, COMPLETED, DEPLETED, EXPIRED, CANCELLED
+    }
+
+    public Status getStatusEnum() {
+        try {
+            return status != null ? Status.valueOf(status) : Status.ACTIVE;
+        } catch (Exception e) {
+            return Status.ACTIVE;
+        }
+    }
+
+    public LocalDate getExpiryDate() {
+        return expiresAt;
+    }
+
+    public void setExpiryDate(LocalDate date) {
+        this.expiresAt = date;
+    }
+
+    public static PtPackage activate(Long customerId, ServicePlan plan, Long orderId, LocalDate startDate) {
+        LocalDate start = startDate != null ? startDate : LocalDate.now();
+        int days = plan.getDurationDays() != null ? plan.getDurationDays() : 60;
+        int sessions = plan.getTotalSessions() != null ? plan.getTotalSessions() : 10;
+        return PtPackage.builder()
+                .studioId(plan.getStudioId() != null ? plan.getStudioId() : 1L)
+                .customerId(customerId)
+                .planId(plan.getId())
+                .orderId(orderId)
+                .totalSessions(sessions)
+                .remainingSessions(sessions)
+                .status("ACTIVE")
+                .expiresAt(start.plusDays(days))
+                .build();
+    }
+
+    public void useOneSession(LocalDate today) {
+        if (remainingSessions == null || remainingSessions <= 0) {
+            throw new IllegalStateException("No sessions remaining");
+        }
+        this.remainingSessions = this.remainingSessions - 1;
+        if (this.remainingSessions == 0) {
+            this.status = "DEPLETED";
+        }
+    }
 }

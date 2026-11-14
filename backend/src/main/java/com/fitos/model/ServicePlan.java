@@ -61,4 +61,32 @@ public class ServicePlan {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    public enum PlanType {
+        MEMBERSHIP, PT_PACKAGE
+    }
+
+    public void setPlanType(PlanType planType) {
+        this.planType = planType != null ? planType.name() : null;
+    }
+
+    public void setPlanType(String planType) {
+        this.planType = planType;
+    }
+
+    public PlanType getPlanTypeEnum() {
+        try {
+            return planType != null ? PlanType.valueOf(planType) : PlanType.MEMBERSHIP;
+        } catch (Exception e) {
+            return PlanType.MEMBERSHIP;
+        }
+    }
+
+    public Integer getTotalSessions() {
+        return sessionCount;
+    }
+
+    public void setTotalSessions(Integer totalSessions) {
+        this.sessionCount = totalSessions;
+    }
 }

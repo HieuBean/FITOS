@@ -3,6 +3,8 @@ package com.fitos.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
@@ -35,6 +37,10 @@ public class AuditLog {
     @Column(name = "entity_id")
     private Long entityId;
 
+    /** Chi tiết thao tác dạng JSON. Phải khai báo kiểu JSON, nếu không Hibernate bind
+     *  như varchar và PostgreSQL từ chối: "column details is of type jsonb but
+     *  expression is of type character varying". */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "JSONB")
     private String details;
 
