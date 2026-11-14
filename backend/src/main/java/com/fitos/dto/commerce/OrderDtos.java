@@ -20,9 +20,13 @@ public final class OrderDtos {
     public record OrderCreateRequest(
             @NotNull Long customerId,
             @NotEmpty @Valid List<OrderItemRequest> items,
+            BigDecimal discountAmount,
             String discountCode,
             String notes
     ) {
+        public OrderCreateRequest(Long customerId, List<OrderItemRequest> items, String discountCode, String notes) {
+            this(customerId, items, null, discountCode, notes);
+        }
     }
 
     public record OrderItemResponse(
