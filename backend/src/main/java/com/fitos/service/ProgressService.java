@@ -91,7 +91,7 @@ public class ProgressService {
         try {
             Query query = entityManager.createNativeQuery(
                     "SELECT COUNT(*) FROM workout_sessions " +
-                    "WHERE customer_id = :customerId AND studio_id = :studioId AND end_time IS NOT NULL " +
+                    "WHERE customer_id = :customerId AND studio_id = :studioId AND completed_at IS NOT NULL " +
                     "AND session_date >= DATE_TRUNC('month', CURRENT_DATE) AND session_date <= CURRENT_DATE"
             );
             query.setParameter("customerId", customerId);
@@ -107,10 +107,10 @@ public class ProgressService {
         try {
             Query prQuery = entityManager.createNativeQuery(
                     "SELECT exercise_name, weight_kg, reps_completed, session_date FROM (" +
-                    " SELECT e.name AS exercise_name, wl.weight_kg, wl.reps_completed, ws.session_date, " +
-                    " ROW_NUMBER() OVER (PARTITION BY e.id ORDER BY wl.weight_kg DESC, wl.reps_completed DESC, " +
+                    " SELECT e.name AS exercise_name, wl.weight_kg, wl.reps_actual AS reps_completed, ws.session_date, " +
+                    " ROW_NUMBER() OVER (PARTITION BY e.id ORDER BY wl.weight_kg DESC, wl.reps_actual DESC, " +
                     " ws.session_date DESC, wl.id DESC) AS rank_no" +
-                    " FROM workout_logs wl JOIN workout_sessions ws ON wl.session_id = ws.id AND wl.studio_id = ws.studio_id" +
+                    " FROM workout_logs wl JOIN workout_sessions ws ON wl.workout_session_id = ws.id AND wl.studio_id = ws.studio_id" +
                     " JOIN exercises e ON wl.exercise_id = e.id" +
                     " WHERE ws.customer_id = :customerId AND ws.studio_id = :studioId" +
                     ") ranked WHERE rank_no = 1 ORDER BY weight_kg DESC LIMIT 5"
@@ -143,7 +143,7 @@ public class ProgressService {
     }
 
     private int calculateCurrentStreak(Long customerId) {
-        List<?> rows = entityManager.createNativeQuery("SELECT DISTINCT session_date FROM workout_sessions WHERE customer_id = :customerId AND end_time IS NOT NULL ORDER BY session_date DESC")
+        List<?> rows = entityManager.createNativeQuery("SELECT DISTINCT session_date FROM workout_sessions WHERE customer_id = :customerId AND completed_at IS NOT NULL ORDER BY session_date DESC")
                 .setParameter("customerId", customerId).getResultList();
         int streak = 0;
         LocalDate expected = LocalDate.now();
@@ -160,7 +160,7 @@ public class ProgressService {
     }
 
     private int calculateLongestStreak(Long customerId) {
-        List<?> rows = entityManager.createNativeQuery("SELECT DISTINCT session_date FROM workout_sessions WHERE customer_id = :customerId AND end_time IS NOT NULL ORDER BY session_date ASC")
+        List<?> rows = entityManager.createNativeQuery("SELECT DISTINCT session_date FROM workout_sessions WHERE customer_id = :customerId AND completed_at IS NOT NULL ORDER BY session_date ASC")
                 .setParameter("customerId", customerId).getResultList();
         int longest = 0;
         int current = 0;

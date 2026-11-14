@@ -40,9 +40,9 @@ public class MemberActivityController {
                     LEFT JOIN classes c ON c.id = cs.class_id AND c.studio_id = a.studio_id
                     WHERE a.customer_id = ? AND a.studio_id = ?
                     UNION ALL
-                    SELECT 'WORKOUT' AS kind, 'Hoàn thành buổi tập' AS title, ws.end_time AS occurred_at
+                    SELECT 'WORKOUT' AS kind, 'Hoàn thành buổi tập' AS title, ws.completed_at AS occurred_at
                     FROM workout_sessions ws
-                    WHERE ws.customer_id = ? AND ws.studio_id = ? AND ws.end_time IS NOT NULL
+                    WHERE ws.customer_id = ? AND ws.studio_id = ? AND ws.completed_at IS NOT NULL
                 ) events
                 ORDER BY occurred_at DESC
                 LIMIT 10
