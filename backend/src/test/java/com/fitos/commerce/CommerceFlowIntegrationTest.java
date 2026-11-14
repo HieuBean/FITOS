@@ -1,11 +1,11 @@
 package com.fitos.commerce;
 
-import com.fitos.membership.Membership;
-import com.fitos.order.Order;
-import com.fitos.order.OrderStatus;
-import com.fitos.payment.Payment;
-import com.fitos.plan.PlanType;
-import com.fitos.plan.ServicePlan;
+import com.fitos.model.Membership;
+import com.fitos.model.Order;
+import com.fitos.model.Payment;
+import com.fitos.model.PtPackage;
+import com.fitos.model.ServicePlan;
+import com.fitos.model.ServicePlan.PlanType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +41,7 @@ class CommerceFlowIntegrationTest {
         order.setSubtotalAmount(plan.getPrice());
         order.setDiscountAmount(BigDecimal.ZERO);
         order.setTotalAmount(plan.getPrice());
-        order.setStatus(OrderStatus.PENDING);
+        order.setStatus("PENDING");
 
         assertTrue(order.isPending());
 
@@ -58,9 +58,9 @@ class CommerceFlowIntegrationTest {
         assertTrue(payment.isSuccess());
 
         // Step 4: Order marked as PAID upon successful payment
-        order.markPaid(payment.getPaidAt());
-        assertEquals(OrderStatus.PAID, order.getStatus());
-        assertEquals(now, order.getPaidAt());
+        order.markPaid(now);
+        assertEquals("PAID", order.getStatus());
+        assertEquals(now.toInstant(), order.getPaidAt());
 
         // Step 5: Service activation triggers Membership creation
         LocalDate today = LocalDate.now();
@@ -70,7 +70,7 @@ class CommerceFlowIntegrationTest {
         assertEquals(order.getCustomerId(), membership.getCustomerId());
         assertEquals(plan.getId(), membership.getPlanId());
         assertEquals(order.getId(), membership.getOrderId());
-        assertEquals(Membership.Status.ACTIVE, membership.getStatus());
+        assertEquals("ACTIVE", membership.getStatus());
         assertEquals(today, membership.getStartDate());
         assertEquals(today.plusDays(29), membership.getEndDate());
         assertTrue(membership.isActiveOn(today));
@@ -112,29 +112,29 @@ class CommerceFlowIntegrationTest {
         order.setSubtotalAmount(pricing.subtotal());
         order.setDiscountAmount(pricing.discount());
         order.setTotalAmount(pricing.total());
-        order.setStatus(OrderStatus.PENDING);
+        order.setStatus("PENDING");
 
         // Step 4: Pay
         OffsetDateTime now = OffsetDateTime.now();
         order.markPaid(now);
-        assertEquals(OrderStatus.PAID, order.getStatus());
+        assertEquals("PAID", order.getStatus());
 
         // Step 5: Activations
         LocalDate today = LocalDate.now();
         Membership membership = Membership.activate(order.getCustomerId(), memberPlan, order.getId(), today);
-        com.fitos.membership.PtPackage ptPackage = com.fitos.membership.PtPackage.activate(order.getCustomerId(), ptPlan, order.getId(), today);
+        PtPackage ptPackage = PtPackage.activate(order.getCustomerId(), ptPlan, order.getId(), today);
 
         assertNotNull(membership);
-        assertEquals(Membership.Status.ACTIVE, membership.getStatus());
+        assertEquals("ACTIVE", membership.getStatus());
 
         assertNotNull(ptPackage);
-        assertEquals(com.fitos.membership.PtPackage.Status.ACTIVE, ptPackage.getStatus());
+        assertEquals("ACTIVE", ptPackage.getStatus());
         assertEquals(10, ptPackage.getTotalSessions());
         assertEquals(10, ptPackage.getRemainingSessions());
 
         // Step 6: Use 1 PT session
         ptPackage.useOneSession(today);
         assertEquals(9, ptPackage.getRemainingSessions());
-        assertEquals(com.fitos.membership.PtPackage.Status.ACTIVE, ptPackage.getStatus());
+        assertEquals("ACTIVE", ptPackage.getStatus());
     }
 }

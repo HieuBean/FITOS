@@ -34,10 +34,13 @@ public class WorkoutLogServiceTest {
     private CustomerRepository customerRepo;
     @Mock
     private ExerciseRepository exerciseRepo;
+    @Mock
+    private CurrentMemberService currentMember;
 
     @InjectMocks
     private WorkoutLogService workoutLogService;
 
+    private com.fitos.security.UserPrincipal principal = null;
     private Customer customer;
     private Exercise exercise;
     private WorkoutSession session;
@@ -61,6 +64,8 @@ public class WorkoutLogServiceTest {
                 .notes("Good form")
                 .build();
 
+        when(currentMember.isStaff(any())).thenReturn(false);
+        when(currentMember.require(any())).thenReturn(customer);
         when(sessionRepo.findById(100L)).thenReturn(Optional.of(session));
         when(exerciseRepo.findById(10L)).thenReturn(Optional.of(exercise));
         when(logRepo.save(any(WorkoutLog.class))).thenAnswer(invocation -> {
@@ -69,7 +74,7 @@ public class WorkoutLogServiceTest {
             return l;
         });
 
-        WorkoutDto.LogResponse res = workoutLogService.createLog(req);
+        WorkoutDto.LogResponse res = workoutLogService.createLog(req, principal);
 
         assertNotNull(res.getId());
         assertEquals(10L, res.getExerciseId());

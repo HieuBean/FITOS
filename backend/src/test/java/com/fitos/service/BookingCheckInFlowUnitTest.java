@@ -41,7 +41,7 @@ public class BookingCheckInFlowUnitTest {
                 .classId(5L)
                 .capacity(20)
                 .bookedCount(0)
-                .sessionDate(LocalDate.now())
+                .sessionDate(LocalDate.now().plusDays(1))
                 .startTime(LocalTime.of(17, 30))
                 .endTime(LocalTime.of(18, 30))
                 .status("SCHEDULED")

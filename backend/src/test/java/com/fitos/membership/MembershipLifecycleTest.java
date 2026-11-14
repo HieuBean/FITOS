@@ -1,7 +1,8 @@
 package com.fitos.membership;
 
-import com.fitos.plan.PlanType;
-import com.fitos.plan.ServicePlan;
+import com.fitos.model.Membership;
+import com.fitos.model.ServicePlan;
+import com.fitos.model.ServicePlan.PlanType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +33,7 @@ class MembershipLifecycleTest {
         assertEquals(start, membership.getStartDate());
         // 30 days inclusive: Oct 1 + 29 days = Oct 30
         assertEquals(LocalDate.of(2026, 10, 30), membership.getEndDate());
-        assertEquals(Membership.Status.ACTIVE, membership.getStatus());
+        assertEquals("ACTIVE", membership.getStatus());
     }
 
     @Test
@@ -50,7 +51,7 @@ class MembershipLifecycleTest {
         LocalDate pauseDate = LocalDate.of(2026, 10, 10);
         m.pause(pauseDate);
 
-        assertEquals(Membership.Status.PAUSED, m.getStatus());
+        assertEquals("PAUSED", m.getStatus());
         assertEquals(pauseDate, m.getPausedAt());
 
         // Resume 5 days later on Oct 15
@@ -59,7 +60,7 @@ class MembershipLifecycleTest {
 
         assertEquals(5, pausedDays);
         assertEquals(5, m.getTotalPausedDays());
-        assertEquals(Membership.Status.ACTIVE, m.getStatus());
+        assertEquals("ACTIVE", m.getStatus());
         assertNull(m.getPausedAt());
         // End date should be extended by 5 days: Oct 30 + 5 days = Nov 4
         assertEquals(initialEnd.plusDays(5), m.getEndDate());
@@ -69,7 +70,7 @@ class MembershipLifecycleTest {
     @DisplayName("Cannot pause non-active membership")
     void pause_nonActive_throwsException() {
         Membership m = new Membership();
-        m.setStatus(Membership.Status.EXPIRED);
+        m.setStatus("EXPIRED");
 
         assertThrows(IllegalStateException.class, () -> m.pause(LocalDate.now()));
     }
@@ -78,7 +79,7 @@ class MembershipLifecycleTest {
     @DisplayName("Cannot resume non-paused membership")
     void resume_nonPaused_throwsException() {
         Membership m = new Membership();
-        m.setStatus(Membership.Status.ACTIVE);
+        m.setStatus("ACTIVE");
 
         assertThrows(IllegalStateException.class, () -> m.resume(LocalDate.now()));
     }

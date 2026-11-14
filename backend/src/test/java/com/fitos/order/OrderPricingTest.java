@@ -1,7 +1,7 @@
 package com.fitos.order;
 
-import com.fitos.plan.PlanType;
-import com.fitos.plan.ServicePlan;
+import com.fitos.model.ServicePlan;
+import com.fitos.model.ServicePlan.PlanType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

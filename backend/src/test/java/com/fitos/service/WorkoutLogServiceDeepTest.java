@@ -44,10 +44,13 @@ public class WorkoutLogServiceDeepTest {
     private CustomerRepository customerRepo;
     @Mock
     private ExerciseRepository exerciseRepo;
+    @Mock
+    private CurrentMemberService currentMember;
 
     @InjectMocks
     private WorkoutLogService workoutLogService;
 
+    private com.fitos.security.UserPrincipal principal = null;
     private Customer customer;
     private Exercise benchPress;
     private WorkoutSession session;
@@ -68,9 +71,11 @@ public class WorkoutLogServiceDeepTest {
                 .setNumber(1)
                 .repsActual(10)
                 .build();
+        // Session không tồn tại: service ném lỗi trước khi kiểm tra quyền sở hữu,
+        // nên không stub currentMember ở đây (Mockito coi stub thừa là lỗi).
         when(sessionRepo.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> workoutLogService.createLog(req));
+        assertThrows(RuntimeException.class, () -> workoutLogService.createLog(req, principal));
         verify(logRepo, never()).save(any());
     }
 
@@ -83,10 +88,11 @@ public class WorkoutLogServiceDeepTest {
                 .setNumber(1)
                 .repsActual(10)
                 .build();
+        when(currentMember.isStaff(any())).thenReturn(true);
         when(sessionRepo.findById(100L)).thenReturn(Optional.of(session));
         when(exerciseRepo.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> workoutLogService.createLog(req));
+        assertThrows(RuntimeException.class, () -> workoutLogService.createLog(req, principal));
         verify(logRepo, never()).save(any());
     }
 

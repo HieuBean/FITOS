@@ -52,6 +52,10 @@ public class WorkoutFlowE2EIntegrationTest {
     @InjectMocks
     private WorkoutLogService workoutLogService;
 
+    @Mock
+    private CurrentMemberService currentMember;
+
+    private com.fitos.security.UserPrincipal principal = null;
     private Customer customer;
     private Exercise benchPress;
     private Exercise squat;
@@ -89,6 +93,7 @@ public class WorkoutFlowE2EIntegrationTest {
                 ))
                 .build();
 
+        when(currentMember.isStaff(any())).thenReturn(true);
         when(customerRepo.findById(100L)).thenReturn(Optional.of(customer));
         when(exerciseRepo.findById(1L)).thenReturn(Optional.of(benchPress));
         when(exerciseRepo.findById(2L)).thenReturn(Optional.of(squat));
@@ -150,7 +155,7 @@ public class WorkoutFlowE2EIntegrationTest {
                 .build();
 
         when(logRepo.save(any(WorkoutLog.class))).thenReturn(logEntity1);
-        WorkoutDto.LogResponse logRes1 = workoutLogService.createLog(logSet1);
+        WorkoutDto.LogResponse logRes1 = workoutLogService.createLog(logSet1, principal);
         assertNotNull(logRes1);
         assertEquals(1L, logRes1.getExerciseId());
         assertEquals("Barbell Bench Press", logRes1.getExerciseName());
