@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '@/lib/api';
 import RoleGuard from '@/components/RoleGuard';
 import BookConfirmModal from '@/components/BookConfirmModal';
-import NoShowBadge from '@/components/NoShowBadge';
 import { formatDate, type BookingDto, type ClassSessionDto } from '@/lib/contracts';
 
 type Tab = 'CLASSES' | 'PT';
@@ -87,9 +86,24 @@ export default function BookClassPage() {
     [myBookings],
   );
 
+  // Lớp đã bắt đầu/qua giờ hoặc đã huỷ thì không còn nhận đặt chỗ.
+  const isPastOrCancelled = (session: ClassSessionDto) => {
+    if (session.status && session.status !== 'SCHEDULED') return true;
+    if (!session.sessionDate || !session.startTime) return false;
+    // Ghép ngày (yyyy-mm-dd) + giờ (HH:mm[:ss]) theo giờ máy người dùng.
+    const [y, m, d] = session.sessionDate.split('-').map(Number);
+    const [hh, mm] = session.startTime.split(':').map(Number);
+    if (!y || !m || !d) return false;
+    const start = new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+    return start.getTime() <= Date.now();
+  };
+
   const filtered = useMemo(
     () =>
-      sessions.filter((session) => category === 'ALL' || session.category === category),
+      sessions.filter(
+        (session) =>
+          (category === 'ALL' || session.category === category) && !isPastOrCancelled(session),
+      ),
     [sessions, category],
   );
 
@@ -128,7 +142,7 @@ export default function BookClassPage() {
               <p className="text-sm text-[#5E625A] mt-1">Chọn ngày, chọn lớp và xác nhận đặt chỗ</p>
             </div>
             <div className="text-right">
-              <p className="text-[11px] uppercase tracking-[0.08em] text-[#8A8E85]">Lượt đặt sắp tới</p>
+              <p className="text-[11px] uppercase tracking-[0.08em] text-[#6B6F66]">Lượt đặt sắp tới</p>
               <p className="text-2xl font-black text-[#111310]">{upcoming.length}</p>
             </div>
           </div>
@@ -167,7 +181,7 @@ export default function BookClassPage() {
             <div className="bg-white border border-[#DADCD3] rounded-xl p-8 text-center">
               <p className="text-3xl mb-3">🏋️</p>
               <p className="text-sm font-bold text-[#111310]">Buổi tập PT do huấn luyện viên xếp</p>
-              <p className="text-xs text-[#8A8E85] mt-1 max-w-md mx-auto">
+              <p className="text-xs text-[#6B6F66] mt-1 max-w-md mx-auto">
                 Lịch PT 1-1 được lễ tân hoặc HLV tạo để đảm bảo không trùng ca dạy. Liên hệ quầy để đặt hoặc
                 dời buổi tập; mọi thay đổi sẽ hiển thị trong mục Lịch sử thanh toán và Gói tập của bạn.
               </p>
@@ -219,7 +233,7 @@ export default function BookClassPage() {
               ) : filtered.length === 0 ? (
                 <div className="bg-white border border-[#DADCD3] rounded-xl p-12 text-center">
                   <p className="text-sm font-bold text-[#111310]">Ngày này chưa có lớp</p>
-                  <p className="text-xs text-[#8A8E85] mt-1">Chọn ngày khác trong tuần.</p>
+                  <p className="text-xs text-[#6B6F66] mt-1">Chọn ngày khác trong tuần.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -239,7 +253,7 @@ export default function BookClassPage() {
                         <p className="text-xs text-[#5E625A] mb-1">
                           với {session.trainerName || 'HLV của studio'}
                         </p>
-                        <p className="text-[11px] text-[#8A8E85] mb-4">
+                        <p className="text-[11px] text-[#6B6F66] mb-4">
                           {session.room} · {formatDate(session.sessionDate)}
                         </p>
                         <div className="flex items-center justify-between">
@@ -278,11 +292,10 @@ export default function BookClassPage() {
                       <div key={booking.id} className="flex items-center gap-3 px-5 py-3">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-[#111310] truncate">{booking.className}</p>
-                          <p className="text-[11px] text-[#8A8E85]">
+                          <p className="text-[11px] text-[#6B6F66]">
                             {formatDate(booking.sessionDate)} · {booking.startTime?.slice(0, 5)}
                           </p>
                         </div>
-                        <NoShowBadge sessionId={booking.sessionId} compact />
                         <button
                           type="button"
                           onClick={() => cancelBooking(booking)}
@@ -304,7 +317,6 @@ export default function BookClassPage() {
             session={selected}
             onConfirm={confirmBooking}
             onClose={() => setSelected(null)}
-            noShowSlot={<NoShowBadge sessionId={selected.id} />}
           />
         )}
       </div>
