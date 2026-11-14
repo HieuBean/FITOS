@@ -14,5 +14,9 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
 
     @Query("SELECT l FROM WorkoutLog l JOIN l.workoutSession s WHERE s.customer.id = :customerId ORDER BY l.weightKg DESC")
     List<WorkoutLog> findCustomerLogsByWeightDesc(@Param("customerId") Long customerId);
+
+    /** Dùng để chặn ghi trùng số hiệu set trong cùng một buổi tập. */
+    boolean existsByWorkoutSessionIdAndExerciseIdAndSetNumber(
+            Long workoutSessionId, Long exerciseId, Integer setNumber);
 }
 
