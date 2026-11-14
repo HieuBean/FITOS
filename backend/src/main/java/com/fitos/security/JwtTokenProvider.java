@@ -41,6 +41,12 @@ public class JwtTokenProvider {
     // In-memory token blacklist for Task #19 (Logout)
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
 
+    /** Thời gian bỏ qua Redis sau một lần lỗi (60 giây). */
+    private static final long REDIS_RETRY_COOLDOWN_MS = 60_000L;
+
+    /** Mốc thời gian được phép thử Redis lại; 0 = chưa từng lỗi. */
+    private volatile long redisRetryAt = 0L;
+
     @Autowired(required = false)
     private StringRedisTemplate redis;
 
@@ -119,30 +125,83 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-            if (isBlacklisted(token)) {
-                log.warn("Token is blacklisted");
-                return false;
-            }
-            return true;
         } catch (JwtException | IllegalArgumentException ex) {
             log.error("Invalid JWT token: {}", ex.getMessage());
             return false;
         }
+        // Kiểm tra blacklist KHÔNG được làm hỏng việc xác thực: nếu Redis sập,
+        // isBlacklisted() trả về null (không kết luận) và token hợp lệ vẫn được chấp nhận.
+        Boolean blacklisted = isBlacklisted(token);
+        if (Boolean.TRUE.equals(blacklisted)) {
+            log.warn("Token is blacklisted");
+            return false;
+        }
+        return true;
     }
 
     public void blacklistToken(String token) {
-        Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        Claims claims;
+        try {
+            claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        } catch (JwtException | IllegalArgumentException ex) {
+            log.debug("Không đọc được token để blacklist: {}", ex.getMessage());
+            return;
+        }
         Duration ttl = Duration.between(new Date().toInstant(), claims.getExpiration().toInstant());
-        if (ttl.isNegative() || ttl.isZero()) return;
-        if (redis == null) {
-            blacklistedTokens.add(token);
-        } else {
-            redis.opsForValue().set(redisKey(token), "1", ttl);
+        if (ttl.isNegative() || ttl.isZero()) {
+            return;
+        }
+        // Luôn ghi vào bộ nhớ cục bộ để logout vẫn có tác dụng khi không có Redis.
+        blacklistedTokens.add(token);
+        if (redis != null) {
+            try {
+                redis.opsForValue().set(redisKey(token), "1", ttl);
+            } catch (Exception ex) {
+                log.warn("Không ghi được blacklist vào Redis ({}). Chỉ áp dụng cục bộ.", ex.getMessage());
+            }
         }
     }
 
-    private boolean isBlacklisted(String token) {
-        return redis == null ? blacklistedTokens.contains(token) : Boolean.TRUE.equals(redis.hasKey(redisKey(token)));
+    /**
+     * @return {@code TRUE} nếu chắc chắn đã bị blacklist, {@code FALSE} nếu chắc chắn chưa,
+     *         {@code null} khi không kiểm tra được (Redis lỗi). Trước đây lỗi Redis ném ra
+     *         khỏi {@code validateToken()} khiến JwtAuthFilter bỏ qua xác thực và mọi request
+     *         đã đăng nhập đều nhận 403 chỉ vì Redis sập.
+     */
+    private Boolean isBlacklisted(String token) {
+        if (blacklistedTokens.contains(token)) {
+            return Boolean.TRUE;
+        }
+        if (redis == null || !redisAvailable()) {
+            return Boolean.FALSE;
+        }
+        try {
+            return Boolean.TRUE.equals(redis.hasKey(redisKey(token)));
+        } catch (Exception ex) {
+            // Cầu dao: Redis lỗi một lần thì bỏ qua hẳn trong 60 giây, tránh việc
+            // MỌI request sau đó vẫn phải chờ timeout rồi mới xử lý.
+            markRedisDown(ex.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Redis chỉ dùng để kiểm tra blacklist (logout) — KHÔNG phải điều kiện bắt buộc
+     * để xác thực. Khi Redis không chạy, mọi request phải đi thẳng vào nghiệp vụ
+     * thay vì chờ timeout.
+     */
+    private boolean redisAvailable() {
+        long retryAfter = redisRetryAt;
+        return retryAfter == 0L || System.currentTimeMillis() >= retryAfter;
+    }
+
+    private void markRedisDown(String reason) {
+        long now = System.currentTimeMillis();
+        // Chỉ log lần đầu của mỗi đợt để không làm ngập log
+        if (redisRetryAt == 0L || now >= redisRetryAt) {
+            log.warn("Redis không dùng được ({}). Tạm bỏ qua kiểm tra blacklist 60 giây.", reason);
+        }
+        redisRetryAt = now + REDIS_RETRY_COOLDOWN_MS;
     }
 
     private String redisKey(String token) {

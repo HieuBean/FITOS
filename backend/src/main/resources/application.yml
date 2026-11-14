@@ -1,4 +1,4 @@
-﻿server:
+server:
   port: 8080
 
 spring:
@@ -6,6 +6,16 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      # Timeout NGẮN để khi Redis không chạy, request không bị treo.
+      # Trước đây dùng timeout mặc định (60s) nên mỗi request đã đăng nhập phải
+      # chờ Redis rồi mới xử lý — trợ lý AI và mọi API đều "đứng hình" 30-60s
+      # trên máy không bật Redis.
+      timeout: 800ms
+      connect-timeout: 800ms
+      lettuce:
+        shutdown-timeout: 100ms
+        pool:
+          enabled: false
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/fitos
     username: ${DB_USER:fitos_user}
