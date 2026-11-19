@@ -152,7 +152,6 @@ public class AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(tokenProvider.getAccessTokenExpirationSeconds())
                 .userId(user.getId())
                 .studioId(principal.getStudioId())
                 .email(user.getEmail())

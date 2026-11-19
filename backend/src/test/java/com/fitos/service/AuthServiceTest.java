@@ -89,7 +89,6 @@ class AuthServiceTest {
     private void stubTokens() {
         when(tokenProvider.generateAccessToken(any())).thenReturn("access-token");
         when(tokenProvider.generateRefreshToken(any())).thenReturn("refresh-token");
-        when(tokenProvider.getAccessTokenExpirationSeconds()).thenReturn(900L);
     }
 
     @Test
@@ -245,12 +244,11 @@ class AuthServiceTest {
         when(studioAccessService.principal(savedUser, 1L)).thenReturn(principal);
         // Refresh chỉ cấp access token mới, refresh token được tái sử dụng
         when(tokenProvider.generateAccessToken(any())).thenReturn("access-token");
-        when(tokenProvider.getAccessTokenExpirationSeconds()).thenReturn(900L);
 
         AuthResponse response = authService.refreshToken(request);
         assertEquals("access-token", response.getAccessToken());
         assertEquals("refresh-token", response.getRefreshToken());
-        assertNotNull(response.getExpiresIn());
+        org.junit.jupiter.api.Assertions.assertNull(response.getExpiresIn());
     }
 
     @Test

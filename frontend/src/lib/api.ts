@@ -14,7 +14,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('fitos_access_token') || localStorage.getItem('fitos_token');
+      const token = sessionStorage.getItem('fitos_access_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -32,21 +32,18 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       if (typeof window !== 'undefined') {
-        const refreshToken = localStorage.getItem('fitos_refresh_token');
+        const refreshToken = sessionStorage.getItem('fitos_refresh_token');
         if (refreshToken) {
           try {
             const res = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
             const { accessToken } = res.data;
-            localStorage.setItem('fitos_access_token', accessToken);
-            document.cookie = `fitos_token=${accessToken}; path=/; max-age=604800; SameSite=Lax`;
+            sessionStorage.setItem('fitos_access_token', accessToken);
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return api(originalRequest);
           } catch (refreshErr) {
-            localStorage.removeItem('fitos_access_token');
-            localStorage.removeItem('fitos_refresh_token');
-            localStorage.removeItem('fitos_user');
-            localStorage.removeItem('fitos_token');
-            document.cookie = 'fitos_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            sessionStorage.removeItem('fitos_access_token');
+            sessionStorage.removeItem('fitos_refresh_token');
+            sessionStorage.removeItem('fitos_user');
             if (!window.location.pathname.startsWith('/login')) {
               window.location.href = '/login';
             }

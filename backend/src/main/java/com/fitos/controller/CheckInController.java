@@ -27,7 +27,7 @@ public class CheckInController {
     private final AttendanceService attendanceService;
 
     @PostMapping("/api/checkin")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST', 'TRAINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'TRAINER')")
     @Operation(summary = "Điểm danh hội viên (bắt buộc còn gói hiệu lực)")
     public ResponseEntity<CheckInResponse> checkIn(@Valid @RequestBody CheckInRequest req,
                                                    @AuthenticationPrincipal UserPrincipal principal) {

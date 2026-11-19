@@ -35,7 +35,7 @@ public class BookingController {
     private final CurrentMemberService currentMemberService;
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('MEMBER', 'ADMIN', 'RECEPTIONIST', 'TRAINER')")
     @Operation(summary = "Đặt chỗ (hội viên tự đặt, staff đặt hộ qua customerId)")
     public ResponseEntity<BookingResponse> book(@RequestBody BookingRequest req,
                                                 @AuthenticationPrincipal UserPrincipal principal) {
@@ -81,7 +81,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('MEMBER', 'ADMIN', 'RECEPTIONIST', 'TRAINER')")
     @Operation(summary = "Huỷ đặt chỗ (hội viên huỷ của mình, staff huỷ hộ)")
     public ResponseEntity<BookingResponse> cancel(@PathVariable("id") Long id,
                                                   @RequestBody(required = false) CancelRequest req,
@@ -95,7 +95,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{id}/no-show")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST', 'TRAINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'TRAINER')")
     @Operation(summary = "Đánh dấu hội viên không đến")
     public ResponseEntity<BookingResponse> noShow(@PathVariable("id") Long id) {
         return ResponseEntity.ok(bookingOpsService.markNoShow(id));

@@ -130,6 +130,7 @@ public class ProductService {
         }
         validateCategory(studioId, req.getCategoryId());
         validatePrices(req.getSellPrice(), req.getCostPrice());
+        requireSalePriceIfActive(req.getIsActive() == null || req.getIsActive(), req.getSellPrice());
 
         Product product = Product.builder()
                 .studioId(studioId)
@@ -167,6 +168,8 @@ public class ProductService {
         }
         validateCategory(studioId, req.getCategoryId());
         validatePrices(req.getSellPrice(), req.getCostPrice());
+        requireSalePriceIfActive(req.getIsActive() == null ? Boolean.TRUE.equals(product.getIsActive())
+                : req.getIsActive(), req.getSellPrice());
 
         product.setSku(sku);
         product.setBarcode(barcode);
@@ -190,6 +193,7 @@ public class ProductService {
         Long studioId = StudioContext.currentStudioId();
         Product product = productRepository.findByIdAndStudioId(id, studioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm: " + id));
+        requireSalePriceIfActive(!Boolean.TRUE.equals(product.getIsActive()), product.getSellPrice());
         product.setIsActive(!Boolean.TRUE.equals(product.getIsActive()));
         return toProductResponse(productRepository.save(product), categoryName(studioId, product.getCategoryId()));
     }
@@ -213,6 +217,12 @@ public class ProductService {
         }
         if (costPrice != null && costPrice.signum() < 0) {
             throw new BadRequestException("Giá vốn không hợp lệ");
+        }
+    }
+
+    private void requireSalePriceIfActive(boolean active, BigDecimal sellPrice) {
+        if (active && (sellPrice == null || sellPrice.signum() <= 0)) {
+            throw new BadRequestException("Cần đặt giá bán lớn hơn 0 trước khi mở bán sản phẩm");
         }
     }
 

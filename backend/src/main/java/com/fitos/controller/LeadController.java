@@ -1,6 +1,7 @@
 package com.fitos.controller;
 
 import com.fitos.dto.lead.*;
+import com.fitos.common.security.Roles;
 import com.fitos.security.UserPrincipal;
 import com.fitos.service.LeadService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +28,7 @@ public class LeadController {
     private final LeadService leadService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Create a new lead")
     public ResponseEntity<LeadResponse> createLead(
             @Valid @RequestBody LeadCreateRequest req,
@@ -54,7 +55,7 @@ public class LeadController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Update lead information")
     public ResponseEntity<LeadResponse> updateLead(
             @PathVariable("id") Long id,
@@ -63,7 +64,7 @@ public class LeadController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Update lead lifecycle status")
     public ResponseEntity<LeadResponse> updateStatus(
             @PathVariable("id") Long id,
@@ -73,7 +74,7 @@ public class LeadController {
     }
 
     @PostMapping("/{id}/activities")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Log an interaction activity on a lead")
     public ResponseEntity<LeadActivityResponse> addActivity(
             @PathVariable("id") Long id,
@@ -90,7 +91,7 @@ public class LeadController {
     }
 
     @PostMapping("/{id}/convert")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Convert a lead into a customer profile")
     public ResponseEntity<LeadResponse> convertLead(@PathVariable("id") Long id) {
         return ResponseEntity.ok(leadService.convertLead(id));
@@ -105,7 +106,7 @@ public class LeadController {
     }
 
     @PatchMapping("/{id}/lost")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Mark a lead as lost with a mandatory reason")
     public ResponseEntity<LeadResponse> markLost(
             @PathVariable("id") Long id,

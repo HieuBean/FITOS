@@ -2,6 +2,10 @@ server:
   port: 8080
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -35,7 +39,6 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET:superjwtsecret_default_key_for_dev_mode}
-  expirationMs: 86400000
 
 ai:
   workout:

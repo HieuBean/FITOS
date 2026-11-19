@@ -19,6 +19,7 @@ const riskLabels: Record<string, string> = {
 
 interface Props {
   days?: number;
+  allowRenew?: boolean;
   /** Cho phép chọn số ngày cảnh báo (mặc định 7). */
   showRangeSelector?: boolean;
 }
@@ -27,7 +28,7 @@ interface Props {
  * Task #88 — widget cảnh báo gia hạn: gọi /memberships/expiring, hiển thị mức rủi ro
  * kèm hành động nhanh (gọi khách / gia hạn).
  */
-export default function RenewalRiskWidget({ days = 7, showRangeSelector = true }: Props) {
+export default function RenewalRiskWidget({ days = 7, showRangeSelector = true, allowRenew = true }: Props) {
   const [range, setRange] = useState(days);
   const [items, setItems] = useState<MembershipDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,14 +126,14 @@ export default function RenewalRiskWidget({ days = 7, showRangeSelector = true }
                 {riskLabels[item.riskLevel] || item.riskLevel}
               </span>
               <MembershipBadge status={item.status} daysRemaining={item.daysRemaining} compact />
-              <button
+              {allowRenew && <button
                 type="button"
                 onClick={() => renew(item.id)}
                 disabled={renewingId === item.id}
                 className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-[#D7FF3F] text-[#111310] hover:bg-[#C4E82E] disabled:opacity-50 transition-colors cursor-pointer"
               >
                 {renewingId === item.id ? 'Đang gia hạn…' : 'Gia hạn'}
-              </button>
+              </button>}
             </li>
           ))}
         </ul>

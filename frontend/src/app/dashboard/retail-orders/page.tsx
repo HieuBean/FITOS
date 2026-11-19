@@ -40,7 +40,7 @@ const STATUS_PILL: Record<string, string> = {
 
 export default function RetailOrdersPage() {
   return (
-    <RoleGuard allowedRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
+    <RoleGuard allowedRoles={['RECEPTIONIST']}>
       <RetailOrders />
     </RoleGuard>
   );

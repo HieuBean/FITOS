@@ -1,0 +1,3 @@
+1. Ở admin, chỉ nên để lại phần quản trị tài khoản & phân quyền, bỏ các chức năng khác do bị trùng với quản lý, cho phép xem chi tiết thông tin của tài khoản khi nhấn vào và chỉnh sửa thông tin của tài khoản
+2. Lỗi phiên đăng nhập thì đăng nhập cùng lúc 2 tap admin và manager, sẽ bị trùng nếu load lại, nguyên nhân: cả hai tab đang dùng chung localStorage cho token và thông tin người dùng. Khi tab thứ hai đăng nhập, nó ghi đè phiên mà tab đầu sẽ đọc lúc tải lại. FITOS còn dùng một cookie chung để chặn trang dashboard
+

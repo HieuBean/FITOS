@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import api from '@/lib/api';
 import RoleGuard from '@/components/RoleGuard';
+import PurchaseReceiptsPanel from '@/components/PurchaseReceiptsPanel';
 import { formatCurrency } from '@/lib/contracts';
+import { calculateStoredSellPrice, preVatPriceFromGross, type OriginalRetailPrice } from '@/lib/retailPrice';
 import {
   CategoryDto,
   InventoryMovementDto,
@@ -24,15 +27,25 @@ import {
   updateProduct,
 } from '@/lib/retailApi';
 
-type Tab = 'products' | 'categories' | 'stock-in' | 'movements' | 'low-stock';
+type Tab = 'products' | 'categories' | 'stock-in' | 'purchase' | 'movements' | 'low-stock';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'products', label: 'Sản phẩm' },
   { id: 'categories', label: 'Danh mục' },
-  { id: 'stock-in', label: 'Nhập kho' },
+  { id: 'purchase', label: 'Phiếu nhập' },
   { id: 'movements', label: 'Lịch sử kho' },
   { id: 'low-stock', label: 'Tồn thấp' },
 ];
+
+const retailCurrency = new Intl.NumberFormat('vi-VN', {
+  style: 'currency',
+  currency: 'VND',
+  maximumFractionDigits: 2,
+});
+
+function normalizeProductSearch(value: string): string {
+  return value.toLocaleLowerCase('vi-VN').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+}
 
 interface ProductForm {
   id?: number;
@@ -43,12 +56,12 @@ interface ProductForm {
   categoryId: string;
   unit: ProductUnit;
   costPrice: string;
-  sellPrice: string;
+  netSellPrice: string;
   vatRate: string;
+  originalPrice?: OriginalRetailPrice;
   lowStockThreshold: string;
   trackInventory: boolean;
   isActive: boolean;
-  initialStock: string;
 }
 
 const emptyForm: ProductForm = {
@@ -59,17 +72,16 @@ const emptyForm: ProductForm = {
   categoryId: '',
   unit: 'CAI',
   costPrice: '',
-  sellPrice: '',
+  netSellPrice: '',
   vatRate: '0',
   lowStockThreshold: '5',
   trackInventory: true,
   isActive: true,
-  initialStock: '',
 };
 
 export default function RetailPage() {
   return (
-    <RoleGuard allowedRoles={['ADMIN', 'MANAGER']}>
+    <RoleGuard allowedRoles={['MANAGER']}>
       <RetailAdmin />
     </RoleGuard>
   );
@@ -87,10 +99,27 @@ function RetailAdmin() {
 
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
+  const [minSellPrice, setMinSellPrice] = useState('');
+  const [maxSellPrice, setMaxSellPrice] = useState('');
+  const minPrice = minSellPrice.trim() === '' ? null : Number(minSellPrice);
+  const maxPrice = maxSellPrice.trim() === '' ? null : Number(maxSellPrice);
+  const priceError = (minPrice !== null && (!Number.isFinite(minPrice) || minPrice < 0))
+    || (maxPrice !== null && (!Number.isFinite(maxPrice) || maxPrice < 0))
+    || (minPrice !== null && maxPrice !== null && minPrice > maxPrice);
+  const visibleProducts = useMemo(() => {
+    const keyword = normalizeProductSearch(search.trim());
+    return products.filter((product) =>
+      (!filterCategory || product.categoryId === Number(filterCategory)) &&
+      (!keyword || [product.name, product.sku, product.barcode ?? '']
+        .some((value) => normalizeProductSearch(value).includes(keyword))) &&
+      (priceError || minPrice === null || Number(product.sellPrice) >= minPrice) &&
+      (priceError || maxPrice === null || Number(product.sellPrice) <= maxPrice));
+  }, [products, search, filterCategory, minPrice, maxPrice, priceError]);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const customerPrice = calculateStoredSellPrice(form.netSellPrice, form.vatRate, form.originalPrice);
 
   const [stockProduct, setStockProduct] = useState<ProductDto | null>(null);
   const [stockQty, setStockQty] = useState('');
@@ -104,19 +133,19 @@ function RetailAdmin() {
     setLoading(true);
     setError(null);
     try {
-      const [cats, prods, moves, lowItems] = await Promise.all([
+      const [cats, firstPage, moves, lowItems] = await Promise.all([
         listCategories(true),
-        searchProducts({
-          search: search.trim() || undefined,
-          categoryId: filterCategory ? Number(filterCategory) : null,
-          activeOnly: false,
-          size: 100,
-        }),
+        searchProducts({ activeOnly: false, size: 100, page: 0 }),
         inventoryMovements({ size: 50 }),
         lowStock(),
       ]);
+      const allProducts = [...firstPage.content];
+      for (let page = 1; page < firstPage.totalPages; page += 1) {
+        const next = await searchProducts({ activeOnly: false, size: 100, page });
+        allProducts.push(...next.content);
+      }
       setCategories(cats);
-      setProducts(prods.content);
+      setProducts(allProducts);
       setMovements(moves.content);
       setLow(lowItems);
     } catch (err) {
@@ -125,7 +154,7 @@ function RetailAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterCategory]);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(loadAll, 250);
@@ -144,6 +173,8 @@ function RetailAdmin() {
   };
 
   const openEdit = (p: ProductDto) => {
+    const netSellPrice = preVatPriceFromGross(Number(p.sellPrice), Number(p.vatRate) || 0);
+    const vatRate = String(p.vatRate ?? 0);
     setForm({
       id: p.id,
       sku: p.sku,
@@ -153,12 +184,12 @@ function RetailAdmin() {
       categoryId: p.categoryId ? String(p.categoryId) : '',
       unit: p.unit,
       costPrice: String(p.costPrice ?? ''),
-      sellPrice: String(p.sellPrice ?? ''),
-      vatRate: String(p.vatRate ?? 0),
+      netSellPrice,
+      vatRate,
+      originalPrice: { gross: Number(p.sellPrice), net: netSellPrice, vat: vatRate },
       lowStockThreshold: String(p.lowStockThreshold ?? 5),
       trackInventory: p.trackInventory,
       isActive: p.isActive,
-      initialStock: '',
     });
     setShowForm(true);
   };
@@ -169,8 +200,13 @@ function RetailAdmin() {
       setError('Nhập SKU và tên sản phẩm');
       return;
     }
-    if (form.sellPrice === '') {
-      setError('Nhập giá bán');
+    if (customerPrice === null || (form.isActive && customerPrice <= 0)) {
+      setError('Nhập giá bán chưa VAT hợp lệ và thuế suất VAT từ 0 đến 100%');
+      return;
+    }
+    const vatRate = Number(form.vatRate);
+    if (!Number.isFinite(vatRate) || vatRate < 0 || vatRate > 100) {
+      setError('VAT phải nằm trong khoảng từ 0 đến 100%');
       return;
     }
     setSaving(true);
@@ -182,9 +218,9 @@ function RetailAdmin() {
       description: form.description.trim() || null,
       categoryId: form.categoryId ? Number(form.categoryId) : null,
       unit: form.unit,
-      costPrice: Number(form.costPrice) || 0,
-      sellPrice: Number(form.sellPrice) || 0,
-      vatRate: Number(form.vatRate) || 0,
+      costPrice: form.id ? Number(form.costPrice) || 0 : 0,
+      sellPrice: customerPrice,
+      vatRate,
       lowStockThreshold: Number(form.lowStockThreshold) || 0,
       trackInventory: form.trackInventory,
       isActive: form.isActive,
@@ -194,16 +230,7 @@ function RetailAdmin() {
         await updateProduct(form.id, payload);
         flash(`Đã cập nhật "${payload.name}"`);
       } else {
-        const created = await createProduct(payload);
-        // Tồn khởi tạo phải đi qua nhập kho để có lịch sử kiểm toán
-        if (form.initialStock && Number(form.initialStock) > 0) {
-          await stockIn({
-            productId: created.id,
-            quantity: Number(form.initialStock),
-            unitCost: Number(form.costPrice) || 0,
-            note: 'Tồn khởi tạo khi tạo sản phẩm',
-          });
-        }
+        await createProduct(payload);
         flash(`Đã tạo "${payload.name}"`);
       }
       setShowForm(false);
@@ -231,6 +258,33 @@ function RetailAdmin() {
     setStockProduct(p);
     setStockQty('');
     setStockCost(String(p.costPrice ?? ''));
+    setTab('purchase');
+  };
+
+  const exportProducts = async () => {
+    try {
+      const response = await api.get('/retail/products/workbook', { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'fitos-products.xlsx';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch { setError('Không xuất được Excel sản phẩm'); }
+  };
+
+  const importProducts = async (file: File) => {
+    setSaving(true); setError(null);
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const response = await api.post<{ created: number; updated: number }>('/retail/products/workbook', body,
+        { headers: { 'Content-Type': 'multipart/form-data' } });
+      flash(`Excel: thêm ${response.data.created}, cập nhật ${response.data.updated} sản phẩm`);
+      await loadAll();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Không nhập được Excel sản phẩm');
+    } finally { setSaving(false); }
   };
 
   const submitStockIn = async (e: React.FormEvent) => {
@@ -323,10 +377,10 @@ function RetailAdmin() {
             </Link>
             <button
               type="button"
-              onClick={openCreate}
+              onClick={() => { setStockProduct(null); setTab('purchase'); }}
               className="h-11 px-4 rounded-lg bg-[#D7FF3F] text-sm font-bold text-[#111310] hover:brightness-95"
             >
-              + Thêm sản phẩm
+              Phiếu nhập hàng
             </button>
           </div>
         </div>
@@ -338,7 +392,7 @@ function RetailAdmin() {
               type="button"
               role="tab"
               aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => { if (t.id === 'purchase') setStockProduct(null); setTab(t.id); }}
               className={`shrink-0 h-11 px-4 text-sm font-semibold border-b-2 transition-colors ${
                 tab === t.id
                   ? 'border-[#111310] text-[#111310]'
@@ -374,14 +428,14 @@ function RetailAdmin() {
         {/* ================================ SẢN PHẨM ================================ */}
         {tab === 'products' && (
           <section aria-label="Danh sách sản phẩm">
-            <div className="flex flex-col sm:flex-row gap-2 mb-3">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Tìm theo tên, SKU, mã vạch"
                 aria-label="Tìm sản phẩm"
-                className="flex-1 h-11 px-3 rounded-lg border border-[#DADCD3] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]"
+                className="h-11 min-w-[220px] flex-[2] rounded-lg border border-[#DADCD3] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]"
               />
               <select
                 value={filterCategory}
@@ -394,14 +448,38 @@ function RetailAdmin() {
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
+              <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Khoảng giá bán đã gồm VAT">
+                <input type="number" min="0" step="1000" inputMode="numeric" value={minSellPrice}
+                  onChange={(event) => setMinSellPrice(event.target.value)} aria-label="Giá bán từ"
+                  placeholder="Giá từ" aria-invalid={priceError}
+                  className="h-11 w-28 rounded-lg border border-[#DADCD3] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]" />
+                <span aria-hidden="true" className="text-sm text-[#5E625A]">–</span>
+                <input type="number" min="0" step="1000" inputMode="numeric" value={maxSellPrice}
+                  onChange={(event) => setMaxSellPrice(event.target.value)} aria-label="Giá bán đến"
+                  placeholder="Giá đến" aria-invalid={priceError}
+                  className="h-11 w-28 rounded-lg border border-[#DADCD3] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]" />
+              </div>
+              <button type="button" onClick={exportProducts}
+                className="h-11 rounded-lg border border-[#DADCD3] bg-white px-4 text-sm font-semibold">Xuất Excel</button>
+              <label className="inline-flex h-11 cursor-pointer items-center rounded-lg border border-[#DADCD3] bg-white px-4 text-sm font-semibold">
+                Nhập Excel
+                <input type="file" accept=".xlsx" className="sr-only" disabled={saving}
+                  onChange={(event) => { const file = event.target.files?.[0]; if (file) void importProducts(file); event.target.value = ''; }} />
+              </label>
+              <button type="button" onClick={openCreate}
+                className="h-11 rounded-lg bg-[#D7FF3F] px-4 text-sm font-bold text-[#111310] hover:brightness-95">
+                + Thêm sản phẩm
+              </button>
             </div>
+
+            {priceError && <p role="alert" className="mb-3 text-sm text-red-700">Khoảng giá bán không hợp lệ. Nhập số từ 0 trở lên và đảm bảo Giá từ không lớn hơn Giá đến.</p>}
 
             {loading ? (
               <div className="h-40 rounded-xl bg-white border border-[#DADCD3] animate-pulse" />
-            ) : products.length === 0 ? (
+            ) : visibleProducts.length === 0 ? (
               <div className="rounded-xl border border-dashed border-[#DADCD3] bg-white px-6 py-12 text-center">
-                <p className="text-sm font-semibold text-[#111310]">Chưa có sản phẩm nào</p>
-                <p className="mt-1 text-xs text-[#5E625A]">Bấm “Thêm sản phẩm” để tạo mặt hàng đầu tiên.</p>
+                <p className="text-sm font-semibold text-[#111310]">{products.length ? 'Không tìm thấy sản phẩm phù hợp' : 'Chưa có sản phẩm nào'}</p>
+                {!products.length && <p className="mt-1 text-xs text-[#5E625A]">Bấm “Thêm sản phẩm” để tạo mặt hàng đầu tiên.</p>}
               </div>
             ) : (
               <div className="rounded-xl border border-[#DADCD3] bg-white overflow-x-auto">
@@ -417,7 +495,7 @@ function RetailAdmin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((p) => (
+                    {visibleProducts.map((p) => (
                       <tr key={p.id} className="border-b border-[#EDEEE8] last:border-0 hover:bg-[#F9FAF6]">
                         <td className="px-4 py-3">
                           <p className="font-semibold text-[#111310]">{p.name}</p>
@@ -599,6 +677,10 @@ function RetailAdmin() {
           </section>
         )}
 
+        {tab === 'purchase' && <PurchaseReceiptsPanel products={products}
+          initialProductId={stockProduct?.id}
+          onConfirmed={async () => { setStockProduct(null); await loadAll(); }} />}
+
         {/* ================================ LỊCH SỬ KHO ================================ */}
         {tab === 'movements' && (
           <section aria-label="Lịch sử biến động kho">
@@ -696,7 +778,6 @@ function RetailAdmin() {
                             onClick={() => {
                               const p = products.find((x) => x.id === i.id);
                               if (p) openStockIn(p);
-                              setTab('stock-in');
                             }}
                             className="h-11 px-3 rounded-md border border-[#DADCD3] text-xs font-semibold text-[#111310] hover:bg-[#F5F5F0]"
                           >
@@ -775,7 +856,7 @@ function RetailAdmin() {
                   ))}
                 </select>
               </Field>
-              <Field label="Giá vốn" htmlFor="pf-cost">
+              {form.id && <Field label="Giá vốn" htmlFor="pf-cost">
                 <input
                   id="pf-cost"
                   type="number"
@@ -784,14 +865,15 @@ function RetailAdmin() {
                   onChange={(e) => setForm((s) => ({ ...s, costPrice: e.target.value }))}
                   className="mt-1 w-full h-11 px-3 rounded-lg border border-[#DADCD3] text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]"
                 />
-              </Field>
-              <Field label="Giá bán (đã gồm VAT)" htmlFor="pf-sell" required>
+              </Field>}
+              <Field label="Giá bán (chưa VAT)" htmlFor="pf-sell" required>
                 <input
                   id="pf-sell"
                   type="number"
                   min={0}
-                  value={form.sellPrice}
-                  onChange={(e) => setForm((s) => ({ ...s, sellPrice: e.target.value }))}
+                  step="0.01"
+                  value={form.netSellPrice}
+                  onChange={(e) => setForm((s) => ({ ...s, netSellPrice: e.target.value }))}
                   className="mt-1 w-full h-11 px-3 rounded-lg border border-[#DADCD3] text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]"
                 />
               </Field>
@@ -801,11 +883,22 @@ function RetailAdmin() {
                   type="number"
                   min={0}
                   max={100}
+                  step="0.01"
                   value={form.vatRate}
                   onChange={(e) => setForm((s) => ({ ...s, vatRate: e.target.value }))}
                   className="mt-1 w-full h-11 px-3 rounded-lg border border-[#DADCD3] text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]"
                 />
               </Field>
+              <div className="sm:col-span-2 rounded-lg border border-[#DADCD3] bg-[#F5F5F0] px-4 py-3" role="status" aria-live="polite">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-[#5E625A]">Giá bán đã gồm VAT</span>
+                  <strong className="text-base text-[#111310]">
+                    {customerPrice === null
+                      ? '—'
+                      : retailCurrency.format(customerPrice)}
+                  </strong>
+                </div>
+              </div>
               <Field label="Ngưỡng cảnh báo tồn" htmlFor="pf-threshold">
                 <input
                   id="pf-threshold"
@@ -816,19 +909,9 @@ function RetailAdmin() {
                   className="mt-1 w-full h-11 px-3 rounded-lg border border-[#DADCD3] text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]"
                 />
               </Field>
-              {!form.id && (
-                <Field label="Tồn khởi tạo" htmlFor="pf-initial">
-                  <input
-                    id="pf-initial"
-                    type="number"
-                    min={0}
-                    value={form.initialStock}
-                    onChange={(e) => setForm((s) => ({ ...s, initialStock: e.target.value }))}
-                    placeholder="0"
-                    className="mt-1 w-full h-11 px-3 rounded-lg border border-[#DADCD3] text-sm focus:outline-none focus:ring-2 focus:ring-[#526B00]"
-                  />
-                </Field>
-              )}
+              {!form.id && <p className="self-center text-xs text-[#5E625A]">
+                Giá vốn và tồn kho được ghi nhận khi xác nhận phiếu nhập.
+              </p>}
             </div>
 
             <div className="mt-4 flex flex-wrap gap-4">
@@ -920,7 +1003,7 @@ function RetailAdmin() {
       )}
 
       {/* Modal nhập kho nhanh từ bảng tồn thấp */}
-      {stockProduct && !showAdjust && tab !== 'stock-in' && (
+      {stockProduct && !showAdjust && tab !== 'stock-in' && tab !== 'purchase' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" role="dialog" aria-modal="true" aria-labelledby="quick-stock-title">
           <form onSubmit={submitStockIn} className="w-full max-w-sm rounded-2xl bg-white p-5">
             <h2 id="quick-stock-title" className="text-base font-black text-[#111310]">Nhập kho</h2>

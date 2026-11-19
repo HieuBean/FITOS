@@ -16,10 +16,12 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.time.Duration;
+import java.time.Instant;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -29,12 +31,6 @@ public class JwtTokenProvider {
 
     @Value("${jwt.secret:fitos_jwt_secret_key_very_secure_for_production_and_dev_2026_at_least_32_bytes_long}")
     private String jwtSecret;
-
-    // 15 minutes access token per Task #17
-    private final long accessTokenExpirationMs = 15 * 60 * 1000L;
-
-    // 7 days refresh token per Task #17
-    private final long refreshTokenExpirationMs = 7 * 24 * 60 * 60 * 1000L;
 
     private SecretKey key;
 
@@ -62,7 +58,6 @@ public class JwtTokenProvider {
 
     public String generateAccessToken(UserPrincipal userPrincipal) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpirationMs);
 
         List<String> roles = userPrincipal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -75,23 +70,22 @@ public class JwtTokenProvider {
                 .claim("roles", roles)
                 .claim("studioId", userPrincipal.getStudioId())
                 .claim("type", "ACCESS")
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
-                .expiration(expiryDate)
                 .signWith(key)
                 .compact();
     }
 
     public String generateRefreshToken(UserPrincipal userPrincipal) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + refreshTokenExpirationMs);
 
         return Jwts.builder()
                 .subject(userPrincipal.getId().toString())
                 .claim("email", userPrincipal.getEmail())
                 .claim("type", "REFRESH")
                 .claim("studioId", userPrincipal.getStudioId())
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
-                .expiration(expiryDate)
                 .signWith(key)
                 .compact();
     }
@@ -147,15 +141,20 @@ public class JwtTokenProvider {
             log.debug("Không đọc được token để blacklist: {}", ex.getMessage());
             return;
         }
-        Duration ttl = Duration.between(new Date().toInstant(), claims.getExpiration().toInstant());
-        if (ttl.isNegative() || ttl.isZero()) {
+        Date expiration = claims.getExpiration();
+        Duration ttl = expiration == null ? null : Duration.between(Instant.now(), expiration.toInstant());
+        if (ttl != null && (ttl.isNegative() || ttl.isZero())) {
             return;
         }
         // Luôn ghi vào bộ nhớ cục bộ để logout vẫn có tác dụng khi không có Redis.
         blacklistedTokens.add(token);
         if (redis != null) {
             try {
-                redis.opsForValue().set(redisKey(token), "1", ttl);
+                if (ttl == null) {
+                    redis.opsForValue().set(redisKey(token), "1");
+                } else {
+                    redis.opsForValue().set(redisKey(token), "1", ttl);
+                }
             } catch (Exception ex) {
                 log.warn("Không ghi được blacklist vào Redis ({}). Chỉ áp dụng cục bộ.", ex.getMessage());
             }
@@ -213,7 +212,4 @@ public class JwtTokenProvider {
         }
     }
 
-    public long getAccessTokenExpirationSeconds() {
-        return accessTokenExpirationMs / 1000;
-    }
 }

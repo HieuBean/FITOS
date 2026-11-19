@@ -171,7 +171,7 @@ export default function LeadDetailPage() {
   const fullName = `${lead.lastName} ${lead.firstName}`.trim();
 
   return (
-    <RoleGuard allowedRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
+    <RoleGuard allowedRoles={['RECEPTIONIST']}>
       <div className="min-h-screen bg-[#F5F5F0]">
       {/* Tiêu đề trang */}
       <div className="bg-white border-b border-[#DADCD3] px-8 py-6">

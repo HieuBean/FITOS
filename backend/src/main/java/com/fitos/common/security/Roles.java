@@ -17,6 +17,8 @@ public final class Roles {
     public static final String PLATFORM_ADMIN = "hasRole('PLATFORM_ADMIN')";
     public static final String ADMIN = "hasRole('ADMIN')";
     public static final String MANAGEMENT = "hasAnyRole('ADMIN','MANAGER')";
+    public static final String FRONT_DESK = "hasAnyRole('ADMIN','RECEPTIONIST')";
+    public static final String FRONT_DESK_OR_TRAINER = "hasAnyRole('ADMIN','RECEPTIONIST','TRAINER')";
     public static final String STAFF = "hasAnyRole('ADMIN','MANAGER','RECEPTIONIST')";
     public static final String STAFF_OR_TRAINER = "hasAnyRole('ADMIN','MANAGER','RECEPTIONIST','TRAINER')";
     public static final String MEMBER = "hasRole('MEMBER')";

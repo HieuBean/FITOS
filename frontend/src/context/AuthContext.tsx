@@ -57,20 +57,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Hydrate authentication state from localStorage on mount
+    // Each tab keeps its own account, including after a reload.
     try {
-      const storedToken = localStorage.getItem('fitos_access_token');
-      const storedUser = localStorage.getItem('fitos_user');
+      const storedToken = sessionStorage.getItem('fitos_access_token');
+      const storedUser = sessionStorage.getItem('fitos_user');
+
+      // Remove credentials left by the older shared-session implementation.
+      localStorage.removeItem('fitos_access_token');
+      localStorage.removeItem('fitos_refresh_token');
+      localStorage.removeItem('fitos_user');
+      localStorage.removeItem('fitos_token');
+      document.cookie = 'fitos_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 
       if (storedToken === 'demo-jwt-token-fitos-offline') {
-        localStorage.removeItem('fitos_access_token');
-        localStorage.removeItem('fitos_refresh_token');
-        localStorage.removeItem('fitos_user');
-        document.cookie = 'fitos_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        sessionStorage.removeItem('fitos_access_token');
+        sessionStorage.removeItem('fitos_refresh_token');
+        sessionStorage.removeItem('fitos_user');
       } else if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        document.cookie = `fitos_token=${storedToken}; path=/; max-age=604800; SameSite=Lax`;
       }
     } catch (e) {
       console.error('Failed to parse stored auth session', e);
@@ -86,12 +91,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { accessToken, refreshToken } = res.data;
       const authUser = normalizeAuthUser(res.data);
 
-      localStorage.setItem('fitos_access_token', accessToken);
+      sessionStorage.setItem('fitos_access_token', accessToken);
       if (refreshToken) {
-        localStorage.setItem('fitos_refresh_token', refreshToken);
+        sessionStorage.setItem('fitos_refresh_token', refreshToken);
       }
-      localStorage.setItem('fitos_user', JSON.stringify(authUser));
-      document.cookie = `fitos_token=${accessToken}; path=/; max-age=604800; SameSite=Lax`;
+      sessionStorage.setItem('fitos_user', JSON.stringify(authUser));
 
       setToken(accessToken);
       setUser(authUser);
@@ -110,12 +114,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { accessToken, refreshToken } = res.data;
       const authUser = normalizeAuthUser(res.data);
 
-      localStorage.setItem('fitos_access_token', accessToken);
+      sessionStorage.setItem('fitos_access_token', accessToken);
       if (refreshToken) {
-        localStorage.setItem('fitos_refresh_token', refreshToken);
+        sessionStorage.setItem('fitos_refresh_token', refreshToken);
       }
-      localStorage.setItem('fitos_user', JSON.stringify(authUser));
-      document.cookie = `fitos_token=${accessToken}; path=/; max-age=604800; SameSite=Lax`;
+      sessionStorage.setItem('fitos_user', JSON.stringify(authUser));
 
       setToken(accessToken);
       setUser(authUser);
@@ -129,14 +132,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout', { refreshToken: localStorage.getItem('fitos_refresh_token') });
+      await api.post('/auth/logout', { refreshToken: sessionStorage.getItem('fitos_refresh_token') });
     } catch {
       // Continue client cleanup even if backend is offline
     } finally {
-      localStorage.removeItem('fitos_access_token');
-      localStorage.removeItem('fitos_refresh_token');
-      localStorage.removeItem('fitos_user');
-      document.cookie = 'fitos_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      sessionStorage.removeItem('fitos_access_token');
+      sessionStorage.removeItem('fitos_refresh_token');
+      sessionStorage.removeItem('fitos_user');
       setUser(null);
       setToken(null);
       router.push('/login');

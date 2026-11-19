@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { canAccessDashboardPath } from '@/lib/portalAccess';
 
 interface NavItem {
   href: string;
@@ -24,27 +25,38 @@ const allNavGroups: NavGroup[] = [
   },
   {
     label: 'TĂNG TRƯỞNG & CRM',
-    roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'],
+    roles: ['RECEPTIONIST'],
     links: [
       { href: '/dashboard/leads', label: 'Khách tiềm năng (CRM)' },
       { href: '/dashboard/create-lead', label: 'Thêm khách tiềm năng' },
       { href: '/dashboard/sales', label: 'Đơn hàng & Doanh số' },
       { href: '/dashboard/create-sale', label: 'Tạo đơn mới' },
-      { href: '/dashboard/plans', label: 'Gói dịch vụ' },
     ],
   },
   {
-    label: 'BÁN HÀNG & KHO',
-    roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'],
+    label: 'BÁN HÀNG TẠI QUẦY',
+    roles: ['RECEPTIONIST'],
     links: [
       { href: '/dashboard/pos', label: 'Bán tại quầy (POS)' },
       { href: '/dashboard/retail-orders', label: 'Đơn bán lẻ' },
-      { href: '/dashboard/retail', label: 'Hàng hoá & Tồn kho' },
+    ],
+  },
+  {
+    label: 'HÓA ĐƠN',
+    roles: ['MANAGER', 'RECEPTIONIST'],
+    links: [{ href: '/dashboard/invoices', label: 'Danh sách & chi tiết hóa đơn' }],
+  },
+  {
+    label: 'DANH MỤC & KHO',
+    roles: ['MANAGER'],
+    links: [
+      { href: '/dashboard/plans', label: 'Gói dịch vụ' },
+      { href: '/dashboard/retail', label: 'Sản phẩm & Tồn kho' },
     ],
   },
   {
     label: 'VẬN HÀNH STUDIO',
-    roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST', 'TRAINER'],
+    roles: ['RECEPTIONIST', 'TRAINER'],
     links: [
       { href: '/dashboard/schedule', label: 'Lịch biểu phòng tập' },
       { href: '/dashboard/bookings', label: 'Danh sách đặt chỗ' },
@@ -53,21 +65,30 @@ const allNavGroups: NavGroup[] = [
   },
   {
     label: 'HUẤN LUYỆN VIÊN',
-    roles: ['ADMIN', 'MANAGER', 'TRAINER'],
+    roles: ['TRAINER'],
     links: [
       { href: '/dashboard/trainer', label: 'Lịch HLV trong ngày' },
       { href: '/dashboard/workout-builder', label: 'Thiết kế giáo án' },
-      { href: '/dashboard/reports', label: 'Báo cáo & Thống kê' },
     ],
   },
   {
+    label: 'BÁO CÁO',
+    roles: ['MANAGER'],
+    links: [{ href: '/dashboard/reports', label: 'Báo cáo & Thống kê' }],
+  },
+  {
     label: 'QUẢN TRỊ',
-    roles: ['ADMIN', 'MANAGER'],
+    roles: ['ADMIN'],
     links: [{ href: '/dashboard/users', label: 'Tài khoản & Phân quyền' }],
   },
   {
+    label: 'NHÂN SỰ',
+    roles: ['MANAGER'],
+    links: [{ href: '/dashboard/staff', label: 'Lễ tân & Huấn luyện viên' }],
+  },
+  {
     label: 'HỘI VIÊN',
-    roles: ['ADMIN', 'MEMBER'],
+    roles: ['MEMBER'],
     links: [
       { href: '/dashboard/member', label: 'Trang cá nhân' },
       { href: '/dashboard/member/book', label: 'Đặt lịch tập' },
@@ -102,10 +123,13 @@ export default function Sidebar() {
 
   const currentRole = (user?.role || 'MEMBER').toUpperCase();
 
-  const visibleGroups = allNavGroups.filter((group) => {
-    if (currentRole === 'ADMIN') return true;
-    return group.roles.includes(currentRole);
-  });
+  const visibleGroups = allNavGroups
+    .filter((group) => group.roles.includes(currentRole))
+    .map((group) => ({
+      ...group,
+      links: group.links.filter((link) => canAccessDashboardPath(currentRole, link.href)),
+    }))
+    .filter((group) => group.links.length > 0);
 
   const getInitials = (name?: string) => {
     if (!name) return 'U';
@@ -134,6 +158,7 @@ export default function Sidebar() {
   };
 
   const getStudioSubtitle = () => {
+    if (currentRole === 'ADMIN') return 'Quản trị tài khoản';
     if (currentRole === 'MEMBER') return 'Cổng Hội Viên · Chi nhánh TT';
     if (currentRole === 'TRAINER') return 'Không gian HLV · Chi nhánh TT';
     return 'Quản lý Studio · Chi nhánh TT';

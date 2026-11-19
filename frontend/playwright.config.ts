@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const targetUrl = process.env.FITOS_TEST_FRONTEND_URL ?? 'http://127.0.0.1:3000';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -8,7 +10,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: targetUrl,
     trace: 'on-first-retry',
   },
   projects: [
@@ -18,8 +20,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:3000',
+    command: process.env.FITOS_TEST_FRONTEND_URL ? 'npm run start -- -H 127.0.0.1 -p 13000' : 'npm run dev',
+    url: targetUrl,
     reuseExistingServer: !process.env.CI,
   },
 });

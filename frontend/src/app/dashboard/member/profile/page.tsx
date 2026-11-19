@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import MembershipBadge from '@/components/MembershipBadge';
 import { formatDate, type MembershipDto } from '@/lib/contracts';
+import PasswordInput from '@/components/PasswordInput';
 
 interface ProfileResponse {
   userId: number;
@@ -276,9 +277,9 @@ export default function ProfilePage() {
                 <h2 className="text-sm font-semibold text-[#111310] mb-5">Đổi mật khẩu</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Mật khẩu hiện tại">
-                    <input
+                    <PasswordInput
+                      id="current-password"
                       required
-                      type="password"
                       value={passwords.currentPassword}
                       onChange={(event) =>
                         setPasswords({ ...passwords, currentPassword: event.target.value })
@@ -287,10 +288,10 @@ export default function ProfilePage() {
                     />
                   </Field>
                   <Field label="Mật khẩu mới (≥ 6 ký tự)">
-                    <input
+                    <PasswordInput
+                      id="new-password"
                       required
                       minLength={6}
-                      type="password"
                       value={passwords.newPassword}
                       onChange={(event) => setPasswords({ ...passwords, newPassword: event.target.value })}
                       className="w-full border border-[#DADCD3] rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D7FF3F]"

@@ -3,6 +3,7 @@ package com.fitos.controller;
 import com.fitos.dto.commerce.PaymentDtos.PaymentCallbackRequest;
 import com.fitos.dto.commerce.PaymentDtos.PaymentRequest;
 import com.fitos.dto.commerce.PaymentDtos.PaymentResponse;
+import com.fitos.common.security.Roles;
 import com.fitos.security.UserPrincipal;
 import com.fitos.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +28,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Tạo giao dịch cho một đơn hàng (CASH thanh toán ngay)")
     public ResponseEntity<PaymentResponse> create(@Valid @RequestBody PaymentRequest req) {
         return new ResponseEntity<>(paymentService.create(req), HttpStatus.CREATED);

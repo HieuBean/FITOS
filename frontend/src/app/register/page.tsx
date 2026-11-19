@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -200,10 +201,9 @@ export default function RegisterPage() {
               <label htmlFor="reg-password" className="block text-xs font-semibold text-[#111310] mb-1.5 uppercase tracking-[0.05em]">
                 Mật khẩu <span className="text-red-500">*</span>
               </label>
-              <input
+              <PasswordInput
                 id="reg-password"
                 name="password"
-                type="password"
                 autoComplete="new-password"
                 required
                 minLength={6}

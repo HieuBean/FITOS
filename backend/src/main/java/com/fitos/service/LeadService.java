@@ -147,6 +147,7 @@ public class LeadService {
 
         // Record status change activity
         LeadActivity activity = LeadActivity.builder()
+                .studioId(lead.getStudioId())
                 .lead(lead)
                 .user(actor)
                 .activityType("FOLLOW_UP")
@@ -189,6 +190,9 @@ public class LeadService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + assignedToUserId));
         if (!studioAccessService.studioIds(assignedUser.getId()).contains(lead.getStudioId())) {
             throw new BadRequestException("Assigned user does not belong to this studio");
+        }
+        if (!studioAccessService.hasStudioRole(assignedUser.getId(), lead.getStudioId(), "ROLE_RECEPTIONIST")) {
+            throw new BadRequestException("Lead chỉ được phân công cho lễ tân trong studio");
         }
 
         lead.setAssignedTo(assignedUser);

@@ -4,6 +4,7 @@ import com.fitos.client.LeadAIClient;
 import com.fitos.dto.lead.LeadActivityRequest;
 import com.fitos.dto.lead.LeadCreateRequest;
 import com.fitos.dto.lead.LeadResponse;
+import com.fitos.dto.lead.LeadStatusUpdateRequest;
 import com.fitos.exception.BadRequestException;
 import com.fitos.exception.ResourceNotFoundException;
 import com.fitos.model.Customer;
@@ -231,6 +232,22 @@ class LeadServiceTest {
         verify(leadActivityRepository).save(activityCaptor.capture());
         assertEquals(STUDIO_ID, activityCaptor.getValue().getStudioId());
         assertNotNull(activityCaptor.getValue().getLead());
+    }
+
+    @Test
+    @DisplayName("Đổi trạng thái lead ghi activity trong cùng studio")
+    void updateStatusKeepsActivityInLeadStudio() {
+        LeadStatusUpdateRequest request = new LeadStatusUpdateRequest();
+        request.setStatus("CONTACTED");
+        when(leadRepository.findByIdAndStudioId(10L, STUDIO_ID)).thenReturn(Optional.of(lead));
+        when(leadRepository.save(any(Lead.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(leadActivityRepository.findByLeadIdOrderByActivityTimeDesc(10L)).thenReturn(List.of());
+
+        leadService.updateStatus(10L, request, null);
+
+        ArgumentCaptor<LeadActivity> activityCaptor = ArgumentCaptor.forClass(LeadActivity.class);
+        verify(leadActivityRepository).save(activityCaptor.capture());
+        assertEquals(STUDIO_ID, activityCaptor.getValue().getStudioId());
     }
 
     @Test

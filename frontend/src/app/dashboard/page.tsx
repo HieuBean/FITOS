@@ -54,7 +54,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <RoleGuard allowedRoles={['ADMIN', 'MANAGER']}>
+    <RoleGuard allowedRoles={['MANAGER']}>
       <div className="min-h-screen bg-[#F5F5F0]">
       {/* Tiêu đề trang */}
       <div className="bg-white border-b border-[#DADCD3] px-8 py-6">
@@ -69,13 +69,13 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/dashboard/create-lead"
+              href="/dashboard/staff"
               className="bg-[#D7FF3F] text-[#111310] font-bold text-xs uppercase tracking-[0.05em] rounded-lg px-4 py-2.5 hover:bg-[#C4E82E] active:scale-[0.99] transition-all shadow-sm flex items-center gap-1.5"
             >
               <span className="text-sm font-black">+</span>
-              <span>Thêm khách tiềm năng</span>
+              <span>Quản lý nhân sự</span>
             </Link>
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         {activeTab === 'OVERVIEW' ? (
           <>
             {/* Cảnh báo gia hạn — task #88 */}
-            <RenewalRiskWidget days={7} />
+            <RenewalRiskWidget days={7} allowRenew={false} />
             {/* Hàng 1: 4 Thẻ KPI chính */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white border border-[#DADCD3] rounded-2xl p-5 shadow-sm">
@@ -264,9 +264,9 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-white border border-[#DADCD3] rounded-2xl p-6 shadow-sm">
-              <h2 className="text-base font-bold text-[#111310]">Công việc CRM</h2>
-              <p className="text-sm text-[#5E625A] mt-2">Xem và chăm sóc các lead đang cần theo dõi trong danh sách CRM.</p>
-              <Link href="/dashboard/leads" className="inline-block text-sm font-bold text-[#526B00] mt-3">Mở danh sách lead →</Link>
+              <h2 className="text-base font-bold text-[#111310]">Điều phối nhân sự</h2>
+              <p className="text-sm text-[#5E625A] mt-2">Theo dõi lễ tân, phân công khách tiềm năng và cập nhật hồ sơ HLV.</p>
+              <Link href="/dashboard/staff" className="inline-block text-sm font-bold text-[#526B00] mt-3">Mở danh sách nhân sự →</Link>
             </div>
           </>
         ) : (

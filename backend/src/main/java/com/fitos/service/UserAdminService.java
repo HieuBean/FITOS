@@ -4,6 +4,7 @@ import com.fitos.dto.user.UserDtos.RoleUpdateRequest;
 import com.fitos.dto.user.UserDtos.StatusUpdateRequest;
 import com.fitos.dto.user.UserDtos.UserCreateRequest;
 import com.fitos.dto.user.UserDtos.UserResponse;
+import com.fitos.dto.user.UserDtos.UserUpdateRequest;
 import com.fitos.exception.BadRequestException;
 import com.fitos.exception.ResourceNotFoundException;
 import com.fitos.model.Role;
@@ -58,7 +59,7 @@ public class UserAdminService {
         Long studioId = StudioContext.currentStudioId();
         StringBuilder sql = new StringBuilder("""
                 SELECT u.id, u.email, u.full_name, u.phone, u.is_active, u.studio_id, u.created_at,
-                       string_agg(DISTINCT r.name, ',') AS roles
+                       COALESCE(string_agg(DISTINCT r.name, ','), 'ROLE_MEMBER') AS roles
                 FROM users u
                 LEFT JOIN user_studio_roles usr ON usr.user_id = u.id AND usr.studio_id = ?
                 LEFT JOIN roles r ON r.id = usr.role_id
@@ -114,12 +115,51 @@ public class UserAdminService {
     }
 
     @Transactional
+    public UserResponse update(Long userId, UserUpdateRequest req) {
+        Long studioId = StudioContext.currentStudioId();
+        User user = requireScopedUser(userId, studioId);
+        String email = req.email().trim().toLowerCase();
+        if (!email.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmailIgnoreCase(email)) {
+            throw new BadRequestException("Email đã được sử dụng: " + email);
+        }
+        if (isPlatformAdmin(userId) && !email.equalsIgnoreCase(user.getEmail())) {
+            throw new BadRequestException("Không thể đổi email của Admin hệ thống");
+        }
+        String name = req.fullName().trim();
+        String phone = req.phone() == null ? "" : req.phone().trim();
+        user.setEmail(email);
+        user.setFullName(name);
+        user.setPhone(phone.isEmpty() ? null : phone);
+        userRepository.saveAndFlush(user);
+        jdbc.update("UPDATE customers SET full_name = ?, email = ?, phone = ? WHERE user_id = ?",
+                name, email, phone, userId);
+        jdbc.update("UPDATE trainers SET full_name = ?, email = ?, phone = ? WHERE user_id = ?",
+                name, email, phone, userId);
+        log.info("Cập nhật tài khoản user {} trong studio {}", userId, studioId);
+        return findOne(studioId, userId);
+    }
+
+    @Transactional
+    public void delete(Long userId, UserPrincipal actor) {
+        Long studioId = StudioContext.currentStudioId();
+        User user = requireScopedUser(userId, studioId);
+        if (actor.getId().equals(userId) || isPlatformAdmin(userId)) {
+            throw new BadRequestException("Không thể xóa tài khoản Admin hệ thống hoặc tài khoản của chính mình");
+        }
+        userRepository.delete(user);
+        userRepository.flush();
+        log.info("Xóa tài khoản user {} trong studio {}", userId, studioId);
+    }
+
+    @Transactional
     public UserResponse changeRole(Long userId, RoleUpdateRequest req, UserPrincipal actor) {
         Long studioId = StudioContext.currentStudioId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + userId));
+        User user = requireScopedUser(userId, studioId);
         if (actor != null && actor.getId().equals(userId)) {
             throw new BadRequestException("Không thể tự đổi vai trò của chính mình");
+        }
+        if (isPlatformAdmin(userId)) {
+            throw new BadRequestException("Không thể đổi vai trò của Admin hệ thống");
         }
         // Bỏ các vai trò cũ trong studio này rồi cấp vai trò mới
         jdbc.update("DELETE FROM user_studio_roles WHERE user_id = ? AND studio_id = ?", userId, studioId);
@@ -139,10 +179,12 @@ public class UserAdminService {
     @Transactional
     public UserResponse setActive(Long userId, StatusUpdateRequest req, UserPrincipal actor) {
         Long studioId = StudioContext.currentStudioId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + userId));
+        User user = requireScopedUser(userId, studioId);
         if (actor != null && actor.getId().equals(userId)) {
             throw new BadRequestException("Không thể tự khoá tài khoản của chính mình");
+        }
+        if (isPlatformAdmin(userId)) {
+            throw new BadRequestException("Không thể khóa Admin hệ thống");
         }
         boolean active = req.isActive() == null || req.isActive();
         user.setIsActive(active);
@@ -163,5 +205,30 @@ public class UserAdminService {
                         """, rowMapper, studioId, userId).stream()
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + userId));
+    }
+
+    private User requireScopedUser(Long userId, Long studioId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + userId));
+        Boolean visible = jdbc.queryForObject("""
+                SELECT EXISTS (
+                    SELECT 1 FROM users u WHERE u.id = ? AND
+                    (u.studio_id = ? OR EXISTS (
+                        SELECT 1 FROM user_studio_roles usr WHERE usr.user_id = u.id AND usr.studio_id = ?
+                    ))
+                )
+                """, Boolean.class, userId, studioId, studioId);
+        if (!Boolean.TRUE.equals(visible)) {
+            throw new ResourceNotFoundException("Không tìm thấy người dùng: " + userId);
+        }
+        return user;
+    }
+
+    private boolean isPlatformAdmin(Long userId) {
+        Boolean platformAdmin = jdbc.queryForObject("""
+                SELECT EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+                WHERE ur.user_id = ? AND r.name = 'ROLE_PLATFORM_ADMIN')
+                """, Boolean.class, userId);
+        return Boolean.TRUE.equals(platformAdmin);
     }
 }

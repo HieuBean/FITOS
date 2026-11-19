@@ -106,7 +106,7 @@ export default function BookingsPage() {
   };
 
   return (
-    <RoleGuard allowedRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'TRAINER']}>
+    <RoleGuard allowedRoles={['RECEPTIONIST', 'TRAINER']}>
       <div className="min-h-screen bg-[#F5F5F0]">
         <div className="bg-white border-b border-[#DADCD3] px-8 py-6">
           <div className="flex items-start justify-between gap-4">

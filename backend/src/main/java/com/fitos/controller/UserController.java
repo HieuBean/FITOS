@@ -4,6 +4,7 @@ import com.fitos.dto.user.UserDtos.RoleUpdateRequest;
 import com.fitos.dto.user.UserDtos.StatusUpdateRequest;
 import com.fitos.dto.user.UserDtos.UserCreateRequest;
 import com.fitos.dto.user.UserDtos.UserResponse;
+import com.fitos.dto.user.UserDtos.UserUpdateRequest;
 import com.fitos.security.UserPrincipal;
 import com.fitos.service.UserAdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,11 +19,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Task #57: quản lý người dùng của studio (ADMIN/MANAGER). */
+/** Quản trị tài khoản trong studio: chỉ Admin. */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Users", description = "Quản trị tài khoản trong studio")
 public class UserController {
 
@@ -41,6 +42,21 @@ public class UserController {
     @Operation(summary = "Tạo tài khoản nhân viên hoặc hội viên")
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserCreateRequest req) {
         return new ResponseEntity<>(userAdminService.create(req), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Sửa thông tin tài khoản trong studio hiện tại")
+    public ResponseEntity<UserResponse> update(@PathVariable Long id,
+                                               @Valid @RequestBody UserUpdateRequest req) {
+        return ResponseEntity.ok(userAdminService.update(id, req));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Xóa tài khoản đăng nhập; giữ dữ liệu nghiệp vụ liên quan")
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+                                       @AuthenticationPrincipal UserPrincipal principal) {
+        userAdminService.delete(id, principal);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/role")

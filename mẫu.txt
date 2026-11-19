@@ -1,0 +1,11 @@
+Tài khoản mẫu của FITOS local:
+
+| Vai trò | Email | Mật khẩu |
+|---|---|---|
+| Admin | `admin@fitos.com` | `AdminBootstrap2026!` |
+| Quản lý | `manager.demo@example.com` | `Demo!h_5YdyS6nmehDpxX` |
+| Lễ tân | `reception.demo@example.com` | Như tài khoản Quản lý |
+| HLV | `sarah.mitchell@fitos.com` | Như tài khoản Quản lý |
+| Hội viên | `linh.demo@example.com`, `minh.demo@example.com`, `an.demo@example.com` | Như tài khoản Quản lý |
+
+Khi đăng nhập Admin hoặc nhân viên, chọn **Cổng Quản Lý Studio**.

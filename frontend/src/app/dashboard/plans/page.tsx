@@ -91,7 +91,7 @@ export default function PlansPage() {
   const packages = plans.filter((plan) => plan.planType === 'PT_PACKAGE');
 
   return (
-    <RoleGuard allowedRoles={['ADMIN', 'MANAGER']}>
+    <RoleGuard allowedRoles={['MANAGER']}>
       <div className="min-h-screen bg-[#F5F5F0]">
         <div className="bg-white border-b border-[#DADCD3] px-8 py-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

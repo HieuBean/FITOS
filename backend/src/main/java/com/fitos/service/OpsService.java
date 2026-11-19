@@ -251,7 +251,7 @@ public class OpsService {
         trainer.setPhone(req.phone().trim());
         trainer.setEmail(req.email());
         trainer.setSpecialization(req.specialization());
-        trainer.setBio(req.bio());
+        if (req.bio() != null) trainer.setBio(req.bio());
         if (req.experienceYears() != null) {
             trainer.setExperienceYears(req.experienceYears());
         }

@@ -24,6 +24,10 @@ import {
 
 const CART_STORAGE_KEY = 'fitos_pos_cart_v1';
 
+function normalizeProductSearch(value: string): string {
+  return value.toLocaleLowerCase('vi-VN').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+}
+
 interface CustomerOption {
   id: number;
   fullName: string;
@@ -46,7 +50,7 @@ function newCartLine(product: ProductDto, quantity = 1): CartLine {
 
 export default function PosPage() {
   return (
-    <RoleGuard allowedRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
+    <RoleGuard allowedRoles={['RECEPTIONIST']}>
       <PosScreen />
     </RoleGuard>
   );
@@ -58,11 +62,19 @@ function PosScreen() {
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [search, setSearch] = useState('');
+  const visibleProducts = useMemo(() => {
+    const keyword = normalizeProductSearch(search.trim());
+    return products.filter((product) =>
+      (activeCategory === null || product.categoryId === activeCategory) &&
+      (!keyword || [product.name, product.sku, product.barcode ?? '']
+        .some((value) => normalizeProductSearch(value).includes(keyword))));
+  }, [products, activeCategory, search]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [banner, setBanner] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
 
   // ---- giỏ hàng ------------------------------------------------------------
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({});
   const [customer, setCustomer] = useState<CustomerOption | null>(null);
   const [customerQuery, setCustomerQuery] = useState('');
   const [customerOptions, setCustomerOptions] = useState<CustomerOption[]>([]);
@@ -93,13 +105,17 @@ function PosScreen() {
   const loadProducts = useCallback(async () => {
     setLoadingProducts(true);
     try {
-      const { content } = await searchProducts({
-        search: search.trim() || undefined,
-        categoryId: activeCategory,
+      const firstPage = await searchProducts({
         activeOnly: true,
         size: 100,
+        page: 0,
       });
-      setProducts(content);
+      const allProducts = [...firstPage.content];
+      for (let page = 1; page < firstPage.totalPages; page += 1) {
+        const nextPage = await searchProducts({ activeOnly: true, size: 100, page });
+        allProducts.push(...nextPage.content);
+      }
+      setProducts(allProducts);
       setBanner(null);
     } catch (err) {
       console.error('Không tải được sản phẩm:', err);
@@ -108,7 +124,7 @@ function PosScreen() {
     } finally {
       setLoadingProducts(false);
     }
-  }, [search, activeCategory]);
+  }, []);
 
   useEffect(() => {
     listCategories().then(setCategories).catch(() => setCategories([]));
@@ -171,20 +187,50 @@ function PosScreen() {
     });
   }, []);
 
+  const maxQuantity = (line: CartLine) => {
+    const product = products.find((item) => item.id === line.productId);
+    return product?.trackInventory === false ? Number.MAX_SAFE_INTEGER : (product?.stockQuantity ?? line.stockQuantity);
+  };
+
   const changeQty = (productId: number, delta: number) => {
+    setQuantityDrafts((prev) => {
+      const next = { ...prev };
+      delete next[productId];
+      return next;
+    });
     setCart((prev) =>
       prev
         .map((l) => {
           if (l.productId !== productId) return l;
           const next = l.quantity + delta;
-          if (delta > 0 && next > l.stockQuantity) {
-            setBanner({ kind: 'error', text: `Chỉ còn ${l.stockQuantity} ${l.unitLabel} cho "${l.name}"` });
+          const max = maxQuantity(l);
+          if (delta > 0 && next > max) {
+            setBanner({ kind: 'error', text: `Chỉ còn ${max} ${l.unitLabel} cho "${l.name}"` });
             return l;
           }
           return { ...l, quantity: next };
         })
         .filter((l) => l.quantity > 0),
     );
+  };
+
+  const commitQuantity = (line: CartLine) => {
+    const draft = quantityDrafts[line.productId];
+    if (draft === undefined) return;
+    setQuantityDrafts((prev) => {
+      const next = { ...prev };
+      delete next[line.productId];
+      return next;
+    });
+    if (draft === '') return;
+    const quantity = Number(draft);
+    if (!Number.isSafeInteger(quantity)) return;
+    const max = maxQuantity(line);
+    if (quantity > max) {
+      setBanner({ kind: 'error', text: `Chỉ còn ${max} ${line.unitLabel} cho "${line.name}"` });
+      return;
+    }
+    setCart((prev) => prev.map((item) => item.productId === line.productId ? { ...item, quantity } : item).filter((item) => item.quantity > 0));
   };
 
   const removeLine = (productId: number) =>
@@ -290,8 +336,8 @@ function PosScreen() {
       if (byCode) {
         addProduct(byCode);
         setSearch('');
-      } else if (products.length === 1) {
-        addProduct(products[0]);
+      } else if (visibleProducts.length === 1) {
+        addProduct(visibleProducts[0]);
         setSearch('');
       } else {
         setBanner({ kind: 'error', text: `Không tìm thấy mã vạch "${code}"` });
@@ -475,7 +521,7 @@ function PosScreen() {
                 <div key={i} className="h-28 rounded-xl bg-white border border-[#DADCD3] animate-pulse" />
               ))}
             </div>
-          ) : products.length === 0 ? (
+          ) : visibleProducts.length === 0 ? (
             <div className="mt-4 rounded-xl border border-dashed border-[#DADCD3] bg-white px-6 py-12 text-center">
               <p className="text-sm font-semibold text-[#111310]">Không có sản phẩm phù hợp</p>
               <p className="mt-1 text-xs text-[#5E625A]">
@@ -484,7 +530,7 @@ function PosScreen() {
             </div>
           ) : (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {products.map((p) => {
+              {visibleProducts.map((p) => {
                 const inCart = cart.find((l) => l.productId === p.id)?.quantity ?? 0;
                 return (
                   <button
@@ -622,9 +668,25 @@ function PosScreen() {
                           >
                             −
                           </button>
-                          <span className="min-w-[32px] text-center text-sm font-bold text-[#111310]" aria-live="polite">
-                            {line.quantity}
-                          </span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={maxQuantity(line)}
+                            step={1}
+                            aria-label={`Số lượng ${line.name}`}
+                            value={quantityDrafts[line.productId] ?? line.quantity}
+                            onChange={(event) => {
+                              if (/^\d*$/.test(event.target.value)) {
+                                setQuantityDrafts((prev) => ({ ...prev, [line.productId]: event.target.value }));
+                              }
+                            }}
+                            onBlur={() => commitQuantity(line)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter') event.currentTarget.blur();
+                            }}
+                            className="h-11 w-14 rounded-md border border-[#DADCD3] bg-white text-center text-sm font-bold text-[#111310] focus:outline-none focus:ring-2 focus:ring-[#526B00]"
+                          />
                           <button
                             type="button"
                             onClick={() => changeQty(line.productId, 1)}

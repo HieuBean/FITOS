@@ -28,7 +28,7 @@ public class RetailOrderController {
     private final CustomerRepository customerRepository;
 
     @PostMapping
-    @PreAuthorize(Roles.STAFF)
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Tạo đơn bán lẻ (giỏ hàng hỗn hợp: sản phẩm, gói, suất lớp)")
     public ResponseEntity<RetailOrderResponse> create(@Valid @RequestBody RetailOrderCreateRequest req) {
         RetailOrderResponse response = retailOrderService.createOrder(req);
@@ -37,7 +37,7 @@ public class RetailOrderController {
     }
 
     @PostMapping("/{id}/pay")
-    @PreAuthorize(Roles.STAFF)
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Thu tiền cho đơn đang chờ thanh toán")
     public ResponseEntity<RetailOrderResponse> pay(@PathVariable Long id,
                                                    @Valid @RequestBody PayOrderRequest req) {
@@ -69,7 +69,7 @@ public class RetailOrderController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize(Roles.STAFF)
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Huỷ đơn chờ thanh toán (hoàn kho, trả suất lớp)")
     public ResponseEntity<RetailOrderResponse> cancel(@PathVariable Long id) {
         return ResponseEntity.ok(retailOrderService.cancel(id));
@@ -85,7 +85,7 @@ public class RetailOrderController {
 
     /** Tạo nhanh hồ sơ khách tại quầy (khách mua nước/chưa là hội viên). */
     @PostMapping("/quick-customer")
-    @PreAuthorize(Roles.STAFF)
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Tạo nhanh khách hàng tại quầy bằng tên và số điện thoại")
     public ResponseEntity<QuickCustomerResponse> quickCustomer(@Valid @RequestBody QuickCustomerRequest req) {
         Long studioId = StudioContext.currentStudioId();

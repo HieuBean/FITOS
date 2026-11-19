@@ -67,4 +67,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findLowStock(@Param("studioId") Long studioId);
 
     List<Product> findByStudioIdAndIsActiveTrueOrderByNameAsc(Long studioId);
+
+    List<Product> findByStudioIdOrderByNameAsc(Long studioId);
 }

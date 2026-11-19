@@ -3,6 +3,7 @@ package com.fitos.controller;
 import com.fitos.dto.commerce.MembershipDtos.MembershipResponse;
 import com.fitos.dto.commerce.MembershipDtos.PauseRequest;
 import com.fitos.dto.commerce.MembershipDtos.RenewRequest;
+import com.fitos.common.security.Roles;
 import com.fitos.security.UserPrincipal;
 import com.fitos.service.MembershipService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -69,7 +70,7 @@ public class MembershipController {
     }
 
     @PostMapping("/{id}/renew")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Gia hạn gói (mặc định theo duration_days của plan)")
     public ResponseEntity<MembershipResponse> renew(@PathVariable("id") Long id,
                                                     @RequestBody(required = false) RenewRequest req) {

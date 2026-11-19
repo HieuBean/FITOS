@@ -38,14 +38,14 @@ public class PtSessionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST', 'TRAINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'TRAINER')")
     @Operation(summary = "Đặt lịch PT (kiểm tra trùng lịch HLV)")
     public ResponseEntity<PtSessionResponse> create(@Valid @RequestBody PtSessionRequest req) {
         return new ResponseEntity<>(scheduleService.create(req), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}/reschedule")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST', 'TRAINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'TRAINER')")
     @Operation(summary = "Dời lịch PT")
     public ResponseEntity<PtSessionResponse> reschedule(@PathVariable("id") Long id,
                                                         @Valid @RequestBody PtSessionRequest req) {
@@ -53,14 +53,14 @@ public class PtSessionController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST', 'TRAINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'TRAINER')")
     @Operation(summary = "Huỷ buổi PT")
     public ResponseEntity<PtSessionResponse> cancel(@PathVariable("id") Long id) {
         return ResponseEntity.ok(scheduleService.cancel(id));
     }
 
     @PatchMapping("/{id}/complete")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST', 'TRAINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'TRAINER')")
     @Operation(summary = "Hoàn thành buổi PT — idempotent theo completionRef")
     public ResponseEntity<PtSessionResponse> complete(@PathVariable("id") Long id,
                                                       @Valid @RequestBody PtCompleteRequest req) {

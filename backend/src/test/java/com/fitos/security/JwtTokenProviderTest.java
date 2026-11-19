@@ -2,11 +2,14 @@ package com.fitos.security;
 
 import com.fitos.model.Role;
 import com.fitos.model.User;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,6 +42,8 @@ public class JwtTokenProviderTest {
         assertTrue(tokenProvider.validateToken(token));
         assertEquals(100L, tokenProvider.getUserIdFromToken(token));
         assertEquals("ACCESS", tokenProvider.getTokenType(token));
+        assertNull(Jwts.parser().verifyWith(Keys.hmacShaKeyFor("super_secret_jwt_key_that_is_at_least_32_bytes_long_for_tests!".getBytes(StandardCharsets.UTF_8))).build().parseSignedClaims(token).getPayload().getExpiration());
+        assertNotEquals(token, tokenProvider.generateAccessToken(principal));
     }
 
     @Test
@@ -75,5 +80,6 @@ public class JwtTokenProviderTest {
         assertNotNull(refreshToken);
         assertTrue(tokenProvider.validateToken(refreshToken));
         assertEquals("REFRESH", tokenProvider.getTokenType(refreshToken));
+        assertNull(Jwts.parser().verifyWith(Keys.hmacShaKeyFor("super_secret_jwt_key_that_is_at_least_32_bytes_long_for_tests!".getBytes(StandardCharsets.UTF_8))).build().parseSignedClaims(refreshToken).getPayload().getExpiration());
     }
 }

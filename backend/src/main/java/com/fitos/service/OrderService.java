@@ -16,10 +16,12 @@ import com.fitos.repository.OrderItemRepository;
 import com.fitos.repository.OrderRepository;
 import com.fitos.repository.ServicePlanRepository;
 import com.fitos.security.StudioContext;
+import com.fitos.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -107,6 +109,7 @@ public class OrderService {
                 .totalAmount(total)
                 .discountCode(req.discountCode() == null ? null : req.discountCode().trim().toUpperCase())
                 .notes(req.notes())
+                .createdBy(currentUserId())
                 .build();
         order = orderRepository.save(order);
 
@@ -203,6 +206,11 @@ public class OrderService {
         return customerRepository.findByIdAndStudioId(customerId, studioId)
                 .map(Customer::getFullName)
                 .orElse(null);
+    }
+
+    private Long currentUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getPrincipal() instanceof UserPrincipal principal ? principal.getId() : null;
     }
 
     private OrderResponse toResponse(Order order, String customerName, List<OrderItem> items) {

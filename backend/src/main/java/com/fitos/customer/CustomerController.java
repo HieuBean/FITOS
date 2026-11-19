@@ -39,7 +39,7 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.STAFF)
+    @PreAuthorize(Roles.FRONT_DESK)
     public CustomerProfile update(@PathVariable Long id, @Valid @RequestBody UpdateCustomerRequest req) {
         return customerService.update(id, req);
     }

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { portalHome } from '@/lib/portalAccess';
 
 interface RoleGuardProps {
   allowedRoles: string[];
@@ -24,8 +25,7 @@ export default function RoleGuard({ allowedRoles, children, fallback }: RoleGuar
   const userRole = (user?.role || '').toUpperCase();
   const normalizedAllowed = allowedRoles.map((r) => r.toUpperCase());
 
-  // ADMIN can access anything
-  const hasAccess = userRole === 'ADMIN' || normalizedAllowed.includes(userRole);
+  const hasAccess = normalizedAllowed.includes(userRole);
 
   if (!hasAccess) {
     if (fallback) return <>{fallback}</>;
@@ -43,7 +43,7 @@ export default function RoleGuard({ allowedRoles, children, fallback }: RoleGuar
           </p>
           <div className="flex justify-center gap-3">
             <Link
-              href={user?.role === 'MEMBER' ? '/dashboard/member' : '/dashboard'}
+              href={portalHome(user?.role)}
               className="bg-[#D7FF3F] text-[#111310] font-semibold px-5 py-2.5 rounded-lg text-sm hover:opacity-90 transition-opacity"
             >
               Về không gian làm việc của bạn

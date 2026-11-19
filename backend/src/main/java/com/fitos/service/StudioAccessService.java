@@ -32,7 +32,7 @@ public class StudioAccessService {
     }
 
     public void grantStaffRole(Long userId, Long studioId, String roleName) {
-        if (!List.of("ROLE_MANAGER", "ROLE_RECEPTIONIST", "ROLE_TRAINER").contains(roleName)) {
+        if (!List.of("ROLE_ADMIN", "ROLE_MANAGER", "ROLE_RECEPTIONIST", "ROLE_TRAINER").contains(roleName)) {
             throw new BadRequestException("Invalid staff role");
         }
         if (!studioRepository.existsById(studioId)) throw new BadRequestException("Studio not found");
@@ -41,6 +41,15 @@ public class StudioAccessService {
         if (count == null || count == 0) throw new BadRequestException("Active user not found");
         jdbc.update("INSERT INTO user_studio_roles (user_id, studio_id, role_id) " +
                 "SELECT ?, ?, id FROM roles WHERE name = ? ON CONFLICT DO NOTHING", userId, studioId, roleName);
+    }
+
+    public boolean hasStudioRole(Long userId, Long studioId, String roleName) {
+        Boolean present = jdbc.queryForObject("""
+                SELECT EXISTS (SELECT 1 FROM user_studio_roles usr
+                JOIN roles r ON r.id = usr.role_id
+                WHERE usr.user_id = ? AND usr.studio_id = ? AND r.name = ?)
+                """, Boolean.class, userId, studioId, roleName);
+        return Boolean.TRUE.equals(present);
     }
 
     public List<Long> studioIds(Long userId) {

@@ -4,6 +4,7 @@ import com.fitos.common.security.Roles;
 import com.fitos.dto.common.PageResponse;
 import com.fitos.dto.retail.RetailDtos.*;
 import com.fitos.service.InventoryService;
+import com.fitos.purchase.PurchaseReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,12 +24,13 @@ import java.util.List;
 public class InventoryController {
 
     private final InventoryService inventoryService;
+    private final PurchaseReceiptService purchaseReceiptService;
 
     @PostMapping("/stock-in")
     @PreAuthorize(Roles.MANAGEMENT)
     @Operation(summary = "Nhập kho (cập nhật giá vốn bình quân gia quyền)")
     public ResponseEntity<InventoryTransactionResponse> stockIn(@Valid @RequestBody StockInRequest req) {
-        return new ResponseEntity<>(inventoryService.stockIn(req), HttpStatus.CREATED);
+        return new ResponseEntity<>(purchaseReceiptService.legacyStockIn(req), HttpStatus.CREATED);
     }
 
     @PostMapping("/adjust")

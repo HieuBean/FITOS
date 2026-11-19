@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
+import PasswordInput from '@/components/PasswordInput';
 
 function LoginForm() {
   const router = useRouter();
@@ -42,7 +43,9 @@ function LoginForm() {
       const user = await login(email, password, studioId);
 
       // Chuyển hướng thông minh theo vai trò người dùng (không để Hội viên bị đẩy vào trang Studio)
-      if (user.role === 'MEMBER') {
+      if (user.role === 'ADMIN') {
+        router.replace('/dashboard/users');
+      } else if (user.role === 'MEMBER') {
         if (redirectUrl && redirectUrl.startsWith('/dashboard/member')) {
           router.push(redirectUrl);
         } else {
@@ -171,10 +174,9 @@ function LoginForm() {
               Quên mật khẩu?
             </a>
           </div>
-          <input
+          <PasswordInput
             id="login-password"
             name="password"
-            type="password"
             autoComplete="current-password"
             required
             value={password}

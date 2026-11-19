@@ -58,14 +58,14 @@ public class WorkoutPlanController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.STAFF_OR_TRAINER)
+    @PreAuthorize(Roles.FRONT_DESK_OR_TRAINER)
     @Operation(summary = "Tạo mới kế hoạch tập luyện (kèm danh sách bài tập theo ngày)")
     public ResponseEntity<WorkoutDto.PlanResponse> create(@Valid @RequestBody WorkoutDto.CreatePlanRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(workoutPlanService.create(req));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.STAFF_OR_TRAINER)
+    @PreAuthorize(Roles.FRONT_DESK_OR_TRAINER)
     @Operation(summary = "Cập nhật kế hoạch tập luyện")
     public ResponseEntity<WorkoutDto.PlanResponse> update(
             @PathVariable Long id,
@@ -74,14 +74,14 @@ public class WorkoutPlanController {
     }
 
     @PatchMapping("/{id}/activate")
-    @PreAuthorize(Roles.STAFF_OR_TRAINER)
+    @PreAuthorize(Roles.FRONT_DESK_OR_TRAINER)
     @Operation(summary = "Kích hoạt kế hoạch tập luyện (tự động deactivate kế hoạch cũ)")
     public ResponseEntity<WorkoutDto.PlanResponse> activate(@PathVariable Long id) {
         return ResponseEntity.ok(workoutPlanService.activate(id));
     }
 
     @PatchMapping("/{id}/complete")
-    @PreAuthorize(Roles.STAFF_OR_TRAINER)
+    @PreAuthorize(Roles.FRONT_DESK_OR_TRAINER)
     @Operation(summary = "Đánh dấu hoàn thành kế hoạch")
     public ResponseEntity<Void> complete(@PathVariable Long id) {
         workoutPlanService.complete(id);
@@ -89,7 +89,7 @@ public class WorkoutPlanController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize(Roles.STAFF_OR_TRAINER)
+    @PreAuthorize(Roles.FRONT_DESK_OR_TRAINER)
     @Operation(summary = "Hủy kế hoạch tập luyện")
     public ResponseEntity<Void> cancel(@PathVariable Long id) {
         workoutPlanService.cancel(id);

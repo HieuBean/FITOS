@@ -3,6 +3,7 @@ package com.fitos.controller;
 import com.fitos.dto.commerce.OrderDtos.OrderCreateRequest;
 import com.fitos.dto.commerce.OrderDtos.OrderResponse;
 import com.fitos.dto.common.PageResponse;
+import com.fitos.common.security.Roles;
 import com.fitos.security.UserPrincipal;
 import com.fitos.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +30,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Tạo đơn hàng (tính tiền ở server)")
     public ResponseEntity<OrderResponse> create(@Valid @RequestBody OrderCreateRequest req) {
         return new ResponseEntity<>(orderService.create(req), HttpStatus.CREATED);
@@ -62,7 +63,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @PreAuthorize(Roles.FRONT_DESK)
     @Operation(summary = "Huỷ đơn đang PENDING")
     public ResponseEntity<OrderResponse> cancel(@PathVariable("id") Long id) {
         return ResponseEntity.ok(orderService.cancel(id));

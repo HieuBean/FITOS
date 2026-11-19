@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
 
-/** Task #57: quản trị người dùng của studio (chỉ ADMIN/MANAGER). */
+/** Quản trị tài khoản trong studio (chỉ ADMIN). */
 public final class UserDtos {
 
     private UserDtos() {
@@ -37,6 +37,13 @@ public final class UserDtos {
             @NotBlank @Pattern(
                     regexp = "ROLE_ADMIN|ROLE_MANAGER|ROLE_RECEPTIONIST|ROLE_TRAINER|ROLE_MEMBER",
                     message = "Vai trò không hợp lệ") String role
+    ) {
+    }
+
+    public record UserUpdateRequest(
+            @NotBlank @Email(message = "Email không hợp lệ") String email,
+            @NotBlank @Size(max = 100) String fullName,
+            @Size(max = 20) String phone
     ) {
     }
 

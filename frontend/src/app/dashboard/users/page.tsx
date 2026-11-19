@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '@/lib/api';
 import RoleGuard from '@/components/RoleGuard';
 import { formatDate } from '@/lib/contracts';
+import PasswordInput from '@/components/PasswordInput';
+import { useAuth } from '@/context/AuthContext';
 
 interface UserRow {
   id: number;
@@ -40,8 +42,9 @@ const emptyForm = {
   role: 'ROLE_RECEPTIONIST',
 };
 
-/** Task #98 — quản trị người dùng (ADMIN/MANAGER): list, đổi vai trò, khoá/mở, tạo mới. */
+/** Cổng Admin: quản trị tài khoản và phân quyền trong studio. */
 export default function UsersPage() {
+  const { user: actor } = useAuth();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
@@ -51,6 +54,7 @@ export default function UsersPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
@@ -127,26 +131,65 @@ export default function UsersPage() {
     }
   };
 
+  const openCreate = () => {
+    setEditingUser(null);
+    setForm(emptyForm);
+    setError(null);
+    setShowModal(true);
+  };
+
+  const openEdit = (user: UserRow) => {
+    setEditingUser(user);
+    setForm({ email: user.email, fullName: user.fullName, phone: user.phone ?? '', password: '', role: user.roles[0] ?? 'ROLE_MEMBER' });
+    setError(null);
+    setShowModal(true);
+  };
+
+  const deleteAccount = async (user: UserRow) => {
+    if (!window.confirm(`Xóa vĩnh viễn tài khoản ${user.email}? Đơn hàng và lịch sử nghiệp vụ sẽ được giữ nhưng không còn liên kết với tài khoản này.`)) return;
+    setBusyId(user.id);
+    setError(null);
+    setNotice(null);
+    try {
+      await api.delete(`/users/${user.id}`);
+      setNotice(`Đã xóa tài khoản ${user.email}.`);
+      await load();
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Xóa tài khoản thất bại.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
     setError(null);
     try {
-      await api.post('/users', {
-        email: form.email.trim(),
-        password: form.password,
-        fullName: form.fullName.trim(),
-        phone: form.phone.trim() || null,
-        role: form.role,
-      });
+      if (editingUser) {
+        await api.put(`/users/${editingUser.id}`, {
+          email: form.email.trim(),
+          fullName: form.fullName.trim(),
+          phone: form.phone.trim() || null,
+        });
+      } else {
+        await api.post('/users', {
+          email: form.email.trim(),
+          password: form.password,
+          fullName: form.fullName.trim(),
+          phone: form.phone.trim() || null,
+          role: form.role,
+        });
+      }
       setShowModal(false);
+      setEditingUser(null);
       setForm(emptyForm);
-      setNotice('Đã tạo tài khoản mới.');
+      setNotice(editingUser ? 'Đã cập nhật tài khoản.' : 'Đã tạo tài khoản mới.');
       await load();
     } catch (err: unknown) {
       setError(
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-          'Tạo tài khoản thất bại.',
+          editingUser ? 'Cập nhật tài khoản thất bại.' : 'Tạo tài khoản thất bại.',
       );
     } finally {
       setSaving(false);
@@ -154,7 +197,7 @@ export default function UsersPage() {
   };
 
   return (
-    <RoleGuard allowedRoles={['ADMIN', 'MANAGER']}>
+    <RoleGuard allowedRoles={['ADMIN']}>
       <div className="min-h-screen bg-[#F5F5F0]">
         <div className="bg-white border-b border-[#DADCD3] px-8 py-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -169,7 +212,7 @@ export default function UsersPage() {
             </div>
             <button
               type="button"
-              onClick={() => setShowModal(true)}
+              onClick={openCreate}
               className="bg-[#D7FF3F] text-[#111310] font-bold rounded-lg px-4 py-2.5 text-sm hover:bg-[#C4E82E] transition-all shadow-sm"
             >
               + Tạo tài khoản
@@ -235,8 +278,8 @@ export default function UsersPage() {
             />
           </div>
 
-          <div className="bg-white border border-[#DADCD3] rounded-xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[2fr_1.3fr_1.2fr_1fr_1.6fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66]">
+          <div className="bg-white border border-[#DADCD3] rounded-xl overflow-x-auto shadow-sm">
+            <div className="grid min-w-[920px] grid-cols-[2fr_1.3fr_1.2fr_1fr_2fr] px-6 py-3.5 bg-[#F5F5F0] border-b border-[#DADCD3] text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6F66]">
               <span>Người dùng</span>
               <span>Vai trò</span>
               <span>Ngày tạo</span>
@@ -260,7 +303,7 @@ export default function UsersPage() {
                   return (
                     <div
                       key={user.id}
-                      className="grid grid-cols-[2fr_1.3fr_1.2fr_1fr_1.6fr] px-6 py-4 items-center hover:bg-[#F9F9F7]"
+                      className="grid min-w-[920px] grid-cols-[2fr_1.3fr_1.2fr_1fr_2fr] px-6 py-4 items-center hover:bg-[#F9F9F7]"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-full bg-[#171A16] text-[#D7FF3F] font-bold text-xs flex items-center justify-center flex-shrink-0">
@@ -301,7 +344,7 @@ export default function UsersPage() {
                       <div className="flex justify-end items-center gap-1.5">
                         <select
                           value={primaryRole}
-                          disabled={busyId === user.id}
+                          disabled={busyId === user.id || actor?.id === user.id}
                           onChange={(event) => changeRole(user, event.target.value)}
                           className="text-[11px] border border-[#DADCD3] rounded-lg px-2 py-1.5 bg-white text-[#111310] disabled:opacity-50"
                           aria-label={`Đổi vai trò của ${user.fullName}`}
@@ -315,7 +358,8 @@ export default function UsersPage() {
                         <button
                           type="button"
                           onClick={() => toggleActive(user)}
-                          disabled={busyId === user.id}
+                          disabled={busyId === user.id || actor?.id === user.id}
+                          aria-label={`${user.isActive ? 'Khóa' : 'Mở'} tài khoản ${user.fullName}`}
                           className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border disabled:opacity-50 ${
                             user.isActive
                               ? 'border-[#DADCD3] text-red-600 hover:bg-red-50'
@@ -323,6 +367,24 @@ export default function UsersPage() {
                           }`}
                         >
                           {user.isActive ? 'Khoá' : 'Mở'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openEdit(user)}
+                          disabled={busyId === user.id}
+                          aria-label={`Sửa tài khoản ${user.fullName}`}
+                          className="min-h-11 rounded-lg border border-[#DADCD3] px-2.5 text-[11px] font-semibold text-[#111310] hover:bg-[#F5F5F0] disabled:opacity-50"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteAccount(user)}
+                          disabled={busyId === user.id || actor?.id === user.id}
+                          aria-label={`Xóa tài khoản ${user.fullName}`}
+                          className="min-h-11 rounded-lg border border-red-200 px-2.5 text-[11px] font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          Xóa
                         </button>
                       </div>
                     </div>
@@ -335,12 +397,13 @@ export default function UsersPage() {
 
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#111310]/50 p-4">
-            <form onSubmit={submit} className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+            <form onSubmit={submit} role="dialog" aria-modal="true" aria-labelledby="account-form-title" className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl">
               <div className="px-6 py-4 border-b border-[#DADCD3]">
-                <h2 className="text-base font-bold text-[#111310]">Tạo tài khoản mới</h2>
-                <p className="text-xs text-[#6B6F66] mt-0.5">Tài khoản được gán vai trò trong studio hiện tại</p>
+                <h2 id="account-form-title" className="text-base font-bold text-[#111310]">{editingUser ? 'Sửa tài khoản' : 'Tạo tài khoản mới'}</h2>
+                <p className="text-xs text-[#6B6F66] mt-0.5">{editingUser ? 'Cập nhật thông tin đăng nhập và liên hệ' : 'Tài khoản được gán vai trò trong studio hiện tại'}</p>
               </div>
               <div className="px-6 py-5 space-y-3">
+                {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-700">{error}</p>}
                 <Field label="Họ và tên">
                   <input
                     required
@@ -353,6 +416,7 @@ export default function UsersPage() {
                   <input
                     required
                     type="email"
+                    readOnly={editingUser?.id === actor?.id}
                     value={form.email}
                     onChange={(event) => setForm({ ...form, email: event.target.value })}
                     className="w-full border border-[#DADCD3] rounded-lg px-3 py-2 text-sm"
@@ -365,17 +429,17 @@ export default function UsersPage() {
                     className="w-full border border-[#DADCD3] rounded-lg px-3 py-2 text-sm"
                   />
                 </Field>
-                <Field label="Mật khẩu ban đầu (≥ 8 ký tự)">
-                  <input
+                {!editingUser && <Field label="Mật khẩu ban đầu (≥ 8 ký tự)">
+                  <PasswordInput
+                    id="new-user-password"
                     required
                     minLength={8}
-                    type="password"
                     value={form.password}
                     onChange={(event) => setForm({ ...form, password: event.target.value })}
                     className="w-full border border-[#DADCD3] rounded-lg px-3 py-2 text-sm"
                   />
-                </Field>
-                <Field label="Vai trò">
+                </Field>}
+                {!editingUser && <Field label="Vai trò">
                   <select
                     value={form.role}
                     onChange={(event) => setForm({ ...form, role: event.target.value })}
@@ -387,7 +451,7 @@ export default function UsersPage() {
                       </option>
                     ))}
                   </select>
-                </Field>
+                </Field>}
               </div>
               <div className="px-6 py-4 border-t border-[#DADCD3] flex justify-end gap-2">
                 <button
@@ -402,7 +466,7 @@ export default function UsersPage() {
                   disabled={saving}
                   className="px-4 py-2 text-sm font-bold bg-[#D7FF3F] text-[#111310] rounded-lg hover:bg-[#C4E82E] disabled:opacity-50"
                 >
-                  {saving ? 'Đang tạo…' : 'Tạo tài khoản'}
+                  {saving ? 'Đang lưu…' : editingUser ? 'Lưu thay đổi' : 'Tạo tài khoản'}
                 </button>
               </div>
             </form>
